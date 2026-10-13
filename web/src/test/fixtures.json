@@ -1,0 +1,1143 @@
+{
+  "first": {
+    "tick": 0,
+    "status": "running",
+    "finished": false,
+    "state": {
+      "tick": 0,
+      "rows": 10,
+      "cols": 10,
+      "terrain": [
+        ["floor", "floor", "floor", "floor", "floor", "wall", "floor", "floor", "floor", "exit"],
+        ["floor", "rubble", "rubble", "floor", "floor", "wall", "floor", "floor", "floor", "floor"],
+        [
+          "floor",
+          "rubble",
+          "floor",
+          "floor",
+          "floor",
+          "wall",
+          "floor",
+          "rubble",
+          "rubble",
+          "floor"
+        ],
+        ["floor", "floor", "floor", "wall", "wall", "wall", "floor", "rubble", "floor", "floor"],
+        ["floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor"],
+        ["wall", "wall", "floor", "wall", "floor", "wall", "wall", "floor", "wall", "wall"],
+        ["floor", "floor", "floor", "floor", "floor", "floor", "rubble", "floor", "floor", "floor"],
+        [
+          "floor",
+          "rubble",
+          "rubble",
+          "floor",
+          "floor",
+          "floor",
+          "rubble",
+          "floor",
+          "floor",
+          "floor"
+        ],
+        ["floor", "floor", "floor", "floor", "wall", "floor", "floor", "floor", "floor", "floor"],
+        ["floor", "floor", "floor", "floor", "wall", "floor", "floor", "floor", "floor", "exit"]
+      ],
+      "fire": [[6, 8]],
+      "hot": [[6, 7], [6, 9], [7, 8]],
+      "agent": {
+        "pos": [4, 4],
+        "carrying": null
+      },
+      "people": [
+        {
+          "id": "p1",
+          "pos": [1, 3],
+          "risk": 1,
+          "urgency": 1,
+          "status": "WAITING"
+        },
+        {
+          "id": "p2",
+          "pos": [7, 8],
+          "risk": 4,
+          "urgency": 4,
+          "status": "WAITING"
+        },
+        {
+          "id": "p3",
+          "pos": [9, 2],
+          "risk": 2,
+          "urgency": 2,
+          "status": "WAITING"
+        }
+      ],
+      "exits": [
+        {
+          "id": "e1",
+          "pos": [0, 9],
+          "available": true,
+          "usable": true
+        },
+        {
+          "id": "e2",
+          "pos": [9, 9],
+          "available": true,
+          "usable": true
+        }
+      ]
+    },
+    "facts": [
+      "AgentAt(c4_4)",
+      "Person(p1, c1_3)",
+      "Waiting(p1)",
+      "Reachable(p1)",
+      "Person(p2, c7_8)",
+      "Waiting(p2)",
+      "Reachable(p2)",
+      "Urgent(p2)",
+      "Person(p3, c9_2)",
+      "Waiting(p3)",
+      "Reachable(p3)",
+      "Exit(e1, c0_9)",
+      "Exit(e2, c9_9)",
+      "Fire(c6_8)"
+    ],
+    "fact_counts": {
+      "Adjacent": 266,
+      "AgentAt": 1,
+      "AtRisk": 1,
+      "Critical": 1,
+      "Eligible": 3,
+      "Exit": 2,
+      "Fire": 1,
+      "Hot": 3,
+      "Person": 3,
+      "Reachable": 3,
+      "RescueNow": 1,
+      "Unsafe": 4,
+      "Urgent": 1,
+      "Waiting": 3
+    },
+    "derived": [
+      {
+        "fact": "Unsafe(c6_8)",
+        "rule": "fire_unsafe",
+        "bindings": {
+          "X": "c6_8"
+        },
+        "premises": ["Fire(c6_8)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Hot(c6_7)",
+        "rule": "hot_zone",
+        "bindings": {
+          "X": "c6_7",
+          "Y": "c6_8"
+        },
+        "premises": ["Adjacent(c6_7, c6_8)", "Fire(c6_8)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Hot(c6_9)",
+        "rule": "hot_zone",
+        "bindings": {
+          "X": "c6_9",
+          "Y": "c6_8"
+        },
+        "premises": ["Adjacent(c6_9, c6_8)", "Fire(c6_8)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Hot(c7_8)",
+        "rule": "hot_zone",
+        "bindings": {
+          "X": "c7_8",
+          "Y": "c6_8"
+        },
+        "premises": ["Adjacent(c7_8, c6_8)", "Fire(c6_8)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Eligible(p1)",
+        "rule": "eligible",
+        "bindings": {
+          "P": "p1"
+        },
+        "premises": ["Waiting(p1)", "Reachable(p1)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Eligible(p2)",
+        "rule": "eligible",
+        "bindings": {
+          "P": "p2"
+        },
+        "premises": ["Waiting(p2)", "Reachable(p2)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Eligible(p3)",
+        "rule": "eligible",
+        "bindings": {
+          "P": "p3"
+        },
+        "premises": ["Waiting(p3)", "Reachable(p3)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Unsafe(c6_7)",
+        "rule": "hot_unsafe",
+        "bindings": {
+          "X": "c6_7"
+        },
+        "premises": ["Hot(c6_7)"],
+        "iteration": 2
+      },
+      {
+        "fact": "Unsafe(c6_9)",
+        "rule": "hot_unsafe",
+        "bindings": {
+          "X": "c6_9"
+        },
+        "premises": ["Hot(c6_9)"],
+        "iteration": 2
+      },
+      {
+        "fact": "Unsafe(c7_8)",
+        "rule": "hot_unsafe",
+        "bindings": {
+          "X": "c7_8"
+        },
+        "premises": ["Hot(c7_8)"],
+        "iteration": 2
+      },
+      {
+        "fact": "AtRisk(p2)",
+        "rule": "at_risk",
+        "bindings": {
+          "P": "p2",
+          "X": "c7_8"
+        },
+        "premises": ["Person(p2, c7_8)", "Unsafe(c7_8)"],
+        "iteration": 3
+      },
+      {
+        "fact": "Critical(p2)",
+        "rule": "critical",
+        "bindings": {
+          "P": "p2"
+        },
+        "premises": ["AtRisk(p2)", "Urgent(p2)"],
+        "iteration": 4
+      },
+      {
+        "fact": "RescueNow(p2)",
+        "rule": "rescue_now",
+        "bindings": {
+          "P": "p2"
+        },
+        "premises": ["Eligible(p2)", "Critical(p2)"],
+        "iteration": 5
+      }
+    ],
+    "priorities": [
+      {
+        "person_id": "p2",
+        "risk": 4.0,
+        "urgency": 4.0,
+        "path_cost": 13.0,
+        "score": 19.0,
+        "breakdown": "p2: 5\u00d74 + 3\u00d74 \u2212 1\u00d713 = 19"
+      },
+      {
+        "person_id": "p3",
+        "risk": 2.0,
+        "urgency": 2.0,
+        "path_cost": 7.0,
+        "score": 9.0,
+        "breakdown": "p3: 5\u00d72 + 3\u00d72 \u2212 1\u00d77 = 9"
+      },
+      {
+        "person_id": "p1",
+        "risk": 1.0,
+        "urgency": 1.0,
+        "path_cost": 6.0,
+        "score": 2.0,
+        "breakdown": "p1: 5\u00d71 + 3\u00d71 \u2212 1\u00d76 = 2"
+      }
+    ],
+    "target": "p2",
+    "plan": [
+      {
+        "label": "Travel(c4_4, c7_8)",
+        "name": "Travel",
+        "params": ["c4_4", "c7_8"],
+        "cost": 13.0,
+        "status": "current",
+        "route": [[4, 4], [5, 4], [6, 4], [7, 4], [7, 5], [7, 6], [7, 7], [7, 8]]
+      },
+      {
+        "label": "PickUp(p2)",
+        "name": "PickUp",
+        "params": ["p2"],
+        "cost": 1.0,
+        "status": "pending",
+        "route": []
+      },
+      {
+        "label": "Travel(c7_8, c9_9)",
+        "name": "Travel",
+        "params": ["c7_8", "c9_9"],
+        "cost": 3.0,
+        "status": "pending",
+        "route": [[7, 8], [8, 8], [9, 8], [9, 9]]
+      },
+      {
+        "label": "DropOff(p2, e2)",
+        "name": "DropOff",
+        "params": ["p2", "e2"],
+        "cost": 1.0,
+        "status": "pending",
+        "route": []
+      }
+    ],
+    "route": [[4, 4], [5, 4], [6, 4], [7, 4], [7, 5], [7, 6], [7, 7], [7, 8]],
+    "plan_change": {
+      "kind": "initial",
+      "reason": "p2 has the highest priority",
+      "is_replan": false,
+      "old_steps": [],
+      "old_cursor": 0
+    },
+    "replan_reason": null,
+    "no_plan_reasons": [],
+    "trace": [
+      {
+        "kind": "RouteComputed",
+        "data": {
+          "src": [4, 4],
+          "dst": [1, 3],
+          "found": true,
+          "cost": 6.0,
+          "expanded": 6,
+          "generated": 15
+        }
+      },
+      {
+        "kind": "RouteComputed",
+        "data": {
+          "src": [4, 4],
+          "dst": [7, 8],
+          "found": true,
+          "cost": 13.0,
+          "expanded": 38,
+          "generated": 55
+        }
+      },
+      {
+        "kind": "RouteComputed",
+        "data": {
+          "src": [4, 4],
+          "dst": [9, 2],
+          "found": true,
+          "cost": 7.0,
+          "expanded": 7,
+          "generated": 15
+        }
+      },
+      {
+        "kind": "RouteComputed",
+        "data": {
+          "src": [7, 8],
+          "dst": [0, 9],
+          "found": true,
+          "cost": 14.0,
+          "expanded": 17,
+          "generated": 27
+        }
+      },
+      {
+        "kind": "RouteComputed",
+        "data": {
+          "src": [7, 8],
+          "dst": [9, 9],
+          "found": true,
+          "cost": 3.0,
+          "expanded": 3,
+          "generated": 9
+        }
+      },
+      {
+        "kind": "PlanFound",
+        "data": {
+          "steps": ["Travel(c4_4, c7_8)", "PickUp(p2)", "Travel(c7_8, c9_9)", "DropOff(p2, e2)"],
+          "cost": 18.0,
+          "expanded": 4
+        }
+      },
+      {
+        "kind": "TargetChosen",
+        "data": {
+          "target": "p2",
+          "switched": false,
+          "reason": "p2 has the highest priority"
+        }
+      },
+      {
+        "kind": "PlanAdopted",
+        "data": {
+          "change": "initial",
+          "reason": "p2 has the highest priority",
+          "steps": ["Travel(c4_4, c7_8)", "PickUp(p2)", "Travel(c7_8, c9_9)", "DropOff(p2, e2)"],
+          "cost": 18.0
+        }
+      }
+    ],
+    "metrics": {
+      "moves": 0,
+      "path_cost": 0.0,
+      "rescued": 0,
+      "plans": 1,
+      "replans": 0,
+      "searches": 5,
+      "nodes_expanded": 71,
+      "plan_nodes_expanded": 4,
+      "kb_base": 280,
+      "kb_derived": 13,
+      "kb_iterations": 6,
+      "timings_ms": {
+        "search": 0.2373750030528754,
+        "reason": 0.846249982714653,
+        "plan": 0.208500016015023,
+        "total": 1.3318749843165278
+      }
+    }
+  },
+  "replanned": {
+    "tick": 5,
+    "status": "running",
+    "finished": false,
+    "state": {
+      "tick": 5,
+      "rows": 10,
+      "cols": 10,
+      "terrain": [
+        ["floor", "floor", "floor", "floor", "floor", "wall", "floor", "floor", "floor", "exit"],
+        ["floor", "rubble", "rubble", "floor", "floor", "wall", "floor", "floor", "floor", "floor"],
+        [
+          "floor",
+          "rubble",
+          "floor",
+          "floor",
+          "floor",
+          "wall",
+          "floor",
+          "rubble",
+          "rubble",
+          "floor"
+        ],
+        ["floor", "floor", "floor", "wall", "wall", "wall", "floor", "rubble", "floor", "floor"],
+        ["floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor"],
+        ["wall", "wall", "floor", "wall", "floor", "wall", "wall", "floor", "wall", "wall"],
+        ["floor", "floor", "floor", "floor", "floor", "floor", "rubble", "floor", "floor", "floor"],
+        [
+          "floor",
+          "rubble",
+          "rubble",
+          "floor",
+          "floor",
+          "floor",
+          "rubble",
+          "floor",
+          "floor",
+          "floor"
+        ],
+        ["floor", "floor", "floor", "floor", "wall", "floor", "floor", "floor", "floor", "floor"],
+        ["floor", "floor", "floor", "floor", "wall", "floor", "floor", "floor", "floor", "exit"]
+      ],
+      "fire": [[6, 7], [6, 8], [8, 7]],
+      "hot": [[5, 7], [6, 6], [6, 9], [7, 7], [7, 8], [8, 6], [8, 8], [9, 7]],
+      "agent": {
+        "pos": [8, 5],
+        "carrying": null
+      },
+      "people": [
+        {
+          "id": "p1",
+          "pos": [1, 3],
+          "risk": 1,
+          "urgency": 1,
+          "status": "WAITING"
+        },
+        {
+          "id": "p2",
+          "pos": [7, 8],
+          "risk": 4,
+          "urgency": 4,
+          "status": "WAITING"
+        },
+        {
+          "id": "p3",
+          "pos": [9, 2],
+          "risk": 2,
+          "urgency": 2,
+          "status": "WAITING"
+        }
+      ],
+      "exits": [
+        {
+          "id": "e1",
+          "pos": [0, 9],
+          "available": true,
+          "usable": true
+        },
+        {
+          "id": "e2",
+          "pos": [9, 9],
+          "available": true,
+          "usable": true
+        }
+      ]
+    },
+    "facts": [
+      "AgentAt(c8_5)",
+      "Person(p1, c1_3)",
+      "Waiting(p1)",
+      "Reachable(p1)",
+      "Person(p2, c7_8)",
+      "Waiting(p2)",
+      "Reachable(p2)",
+      "Urgent(p2)",
+      "Person(p3, c9_2)",
+      "Waiting(p3)",
+      "Reachable(p3)",
+      "Exit(e1, c0_9)",
+      "Exit(e2, c9_9)",
+      "Fire(c6_7)",
+      "Fire(c6_8)",
+      "Fire(c8_7)"
+    ],
+    "fact_counts": {
+      "Adjacent": 266,
+      "AgentAt": 1,
+      "AtRisk": 1,
+      "Critical": 1,
+      "Eligible": 3,
+      "Exit": 2,
+      "Fire": 3,
+      "Hot": 10,
+      "Person": 3,
+      "Reachable": 3,
+      "RescueNow": 1,
+      "Unsafe": 11,
+      "Urgent": 1,
+      "Waiting": 3
+    },
+    "derived": [
+      {
+        "fact": "Unsafe(c6_7)",
+        "rule": "fire_unsafe",
+        "bindings": {
+          "X": "c6_7"
+        },
+        "premises": ["Fire(c6_7)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Unsafe(c6_8)",
+        "rule": "fire_unsafe",
+        "bindings": {
+          "X": "c6_8"
+        },
+        "premises": ["Fire(c6_8)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Unsafe(c8_7)",
+        "rule": "fire_unsafe",
+        "bindings": {
+          "X": "c8_7"
+        },
+        "premises": ["Fire(c8_7)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Hot(c5_7)",
+        "rule": "hot_zone",
+        "bindings": {
+          "X": "c5_7",
+          "Y": "c6_7"
+        },
+        "premises": ["Adjacent(c5_7, c6_7)", "Fire(c6_7)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Hot(c6_6)",
+        "rule": "hot_zone",
+        "bindings": {
+          "X": "c6_6",
+          "Y": "c6_7"
+        },
+        "premises": ["Adjacent(c6_6, c6_7)", "Fire(c6_7)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Hot(c6_8)",
+        "rule": "hot_zone",
+        "bindings": {
+          "X": "c6_8",
+          "Y": "c6_7"
+        },
+        "premises": ["Adjacent(c6_8, c6_7)", "Fire(c6_7)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Hot(c7_7)",
+        "rule": "hot_zone",
+        "bindings": {
+          "X": "c7_7",
+          "Y": "c6_7"
+        },
+        "premises": ["Adjacent(c7_7, c6_7)", "Fire(c6_7)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Hot(c6_7)",
+        "rule": "hot_zone",
+        "bindings": {
+          "X": "c6_7",
+          "Y": "c6_8"
+        },
+        "premises": ["Adjacent(c6_7, c6_8)", "Fire(c6_8)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Hot(c6_9)",
+        "rule": "hot_zone",
+        "bindings": {
+          "X": "c6_9",
+          "Y": "c6_8"
+        },
+        "premises": ["Adjacent(c6_9, c6_8)", "Fire(c6_8)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Hot(c7_8)",
+        "rule": "hot_zone",
+        "bindings": {
+          "X": "c7_8",
+          "Y": "c6_8"
+        },
+        "premises": ["Adjacent(c7_8, c6_8)", "Fire(c6_8)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Hot(c8_6)",
+        "rule": "hot_zone",
+        "bindings": {
+          "X": "c8_6",
+          "Y": "c8_7"
+        },
+        "premises": ["Adjacent(c8_6, c8_7)", "Fire(c8_7)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Hot(c8_8)",
+        "rule": "hot_zone",
+        "bindings": {
+          "X": "c8_8",
+          "Y": "c8_7"
+        },
+        "premises": ["Adjacent(c8_8, c8_7)", "Fire(c8_7)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Hot(c9_7)",
+        "rule": "hot_zone",
+        "bindings": {
+          "X": "c9_7",
+          "Y": "c8_7"
+        },
+        "premises": ["Adjacent(c9_7, c8_7)", "Fire(c8_7)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Eligible(p1)",
+        "rule": "eligible",
+        "bindings": {
+          "P": "p1"
+        },
+        "premises": ["Waiting(p1)", "Reachable(p1)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Eligible(p2)",
+        "rule": "eligible",
+        "bindings": {
+          "P": "p2"
+        },
+        "premises": ["Waiting(p2)", "Reachable(p2)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Eligible(p3)",
+        "rule": "eligible",
+        "bindings": {
+          "P": "p3"
+        },
+        "premises": ["Waiting(p3)", "Reachable(p3)"],
+        "iteration": 1
+      },
+      {
+        "fact": "Unsafe(c5_7)",
+        "rule": "hot_unsafe",
+        "bindings": {
+          "X": "c5_7"
+        },
+        "premises": ["Hot(c5_7)"],
+        "iteration": 2
+      },
+      {
+        "fact": "Unsafe(c6_6)",
+        "rule": "hot_unsafe",
+        "bindings": {
+          "X": "c6_6"
+        },
+        "premises": ["Hot(c6_6)"],
+        "iteration": 2
+      },
+      {
+        "fact": "Unsafe(c7_7)",
+        "rule": "hot_unsafe",
+        "bindings": {
+          "X": "c7_7"
+        },
+        "premises": ["Hot(c7_7)"],
+        "iteration": 2
+      },
+      {
+        "fact": "Unsafe(c6_9)",
+        "rule": "hot_unsafe",
+        "bindings": {
+          "X": "c6_9"
+        },
+        "premises": ["Hot(c6_9)"],
+        "iteration": 2
+      },
+      {
+        "fact": "Unsafe(c7_8)",
+        "rule": "hot_unsafe",
+        "bindings": {
+          "X": "c7_8"
+        },
+        "premises": ["Hot(c7_8)"],
+        "iteration": 2
+      },
+      {
+        "fact": "Unsafe(c8_6)",
+        "rule": "hot_unsafe",
+        "bindings": {
+          "X": "c8_6"
+        },
+        "premises": ["Hot(c8_6)"],
+        "iteration": 2
+      },
+      {
+        "fact": "Unsafe(c8_8)",
+        "rule": "hot_unsafe",
+        "bindings": {
+          "X": "c8_8"
+        },
+        "premises": ["Hot(c8_8)"],
+        "iteration": 2
+      },
+      {
+        "fact": "Unsafe(c9_7)",
+        "rule": "hot_unsafe",
+        "bindings": {
+          "X": "c9_7"
+        },
+        "premises": ["Hot(c9_7)"],
+        "iteration": 2
+      },
+      {
+        "fact": "AtRisk(p2)",
+        "rule": "at_risk",
+        "bindings": {
+          "P": "p2",
+          "X": "c7_8"
+        },
+        "premises": ["Person(p2, c7_8)", "Unsafe(c7_8)"],
+        "iteration": 3
+      },
+      {
+        "fact": "Critical(p2)",
+        "rule": "critical",
+        "bindings": {
+          "P": "p2"
+        },
+        "premises": ["AtRisk(p2)", "Urgent(p2)"],
+        "iteration": 4
+      },
+      {
+        "fact": "RescueNow(p2)",
+        "rule": "rescue_now",
+        "bindings": {
+          "P": "p2"
+        },
+        "premises": ["Eligible(p2)", "Critical(p2)"],
+        "iteration": 5
+      }
+    ],
+    "priorities": [
+      {
+        "person_id": "p2",
+        "risk": 4.0,
+        "urgency": 4.5,
+        "path_cost": 14.0,
+        "score": 19.5,
+        "breakdown": "p2: 5\u00d74 + 3\u00d74.5 \u2212 1\u00d714 = 19.5"
+      },
+      {
+        "person_id": "p3",
+        "risk": 2.0,
+        "urgency": 2.5,
+        "path_cost": 6.0,
+        "score": 11.5,
+        "breakdown": "p3: 5\u00d72 + 3\u00d72.5 \u2212 1\u00d76 = 11.5"
+      },
+      {
+        "person_id": "p1",
+        "risk": 1.0,
+        "urgency": 1.5,
+        "path_cost": 11.0,
+        "score": -1.5,
+        "breakdown": "p1: 5\u00d71 + 3\u00d71.5 \u2212 1\u00d711 = -1.5"
+      }
+    ],
+    "target": "p2",
+    "plan": [
+      {
+        "label": "Travel(c8_5, c7_8)",
+        "name": "Travel",
+        "params": ["c8_5", "c7_8"],
+        "cost": 14.0,
+        "status": "current",
+        "route": [[8, 5], [7, 5], [7, 6], [7, 7], [7, 8]]
+      },
+      {
+        "label": "PickUp(p2)",
+        "name": "PickUp",
+        "params": ["p2"],
+        "cost": 1.0,
+        "status": "pending",
+        "route": []
+      },
+      {
+        "label": "Travel(c7_8, c9_9)",
+        "name": "Travel",
+        "params": ["c7_8", "c9_9"],
+        "cost": 3.0,
+        "status": "pending",
+        "route": [[7, 8], [7, 9], [8, 9], [9, 9]]
+      },
+      {
+        "label": "DropOff(p2, e2)",
+        "name": "DropOff",
+        "params": ["p2", "e2"],
+        "cost": 1.0,
+        "status": "pending",
+        "route": []
+      }
+    ],
+    "route": [[8, 5], [7, 5], [7, 6], [7, 7], [7, 8]],
+    "plan_change": {
+      "kind": "invalid",
+      "reason": "Travel(c7_5, c7_8): route cell (8, 7) is now on fire",
+      "is_replan": true,
+      "old_steps": ["Travel(c7_5, c7_8)", "PickUp(p2)", "Travel(c7_8, c9_9)", "DropOff(p2, e2)"],
+      "old_cursor": 0
+    },
+    "replan_reason": "Travel(c7_5, c7_8): route cell (8, 7) is now on fire",
+    "no_plan_reasons": [],
+    "trace": [
+      {
+        "kind": "ActionExecuted",
+        "data": {
+          "tick": 4,
+          "action": "Move",
+          "detail": "(7, 5) \u2192 (8, 5)",
+          "cost": 1.0
+        }
+      },
+      {
+        "kind": "RouteComputed",
+        "data": {
+          "src": [8, 5],
+          "dst": [1, 3],
+          "found": true,
+          "cost": 11.0,
+          "expanded": 14,
+          "generated": 30
+        }
+      },
+      {
+        "kind": "RouteComputed",
+        "data": {
+          "src": [8, 5],
+          "dst": [7, 8],
+          "found": true,
+          "cost": 8.0,
+          "expanded": 14,
+          "generated": 22
+        }
+      },
+      {
+        "kind": "RouteComputed",
+        "data": {
+          "src": [8, 5],
+          "dst": [9, 2],
+          "found": true,
+          "cost": 6.0,
+          "expanded": 8,
+          "generated": 17
+        }
+      },
+      {
+        "kind": "EventApplied",
+        "data": {
+          "tick": 5,
+          "event_type": "NEW_FIRE",
+          "args": {
+            "pos": [8, 7]
+          }
+        }
+      },
+      {
+        "kind": "RouteComputed",
+        "data": {
+          "src": [8, 5],
+          "dst": [1, 3],
+          "found": true,
+          "cost": 11.0,
+          "expanded": 14,
+          "generated": 30
+        }
+      },
+      {
+        "kind": "RouteComputed",
+        "data": {
+          "src": [8, 5],
+          "dst": [7, 8],
+          "found": true,
+          "cost": 14.0,
+          "expanded": 29,
+          "generated": 44
+        }
+      },
+      {
+        "kind": "RouteComputed",
+        "data": {
+          "src": [8, 5],
+          "dst": [9, 2],
+          "found": true,
+          "cost": 6.0,
+          "expanded": 8,
+          "generated": 17
+        }
+      },
+      {
+        "kind": "RouteComputed",
+        "data": {
+          "src": [7, 8],
+          "dst": [0, 9],
+          "found": true,
+          "cost": 22.0,
+          "expanded": 23,
+          "generated": 36
+        }
+      },
+      {
+        "kind": "RouteComputed",
+        "data": {
+          "src": [7, 8],
+          "dst": [9, 9],
+          "found": true,
+          "cost": 3.0,
+          "expanded": 3,
+          "generated": 7
+        }
+      },
+      {
+        "kind": "PlanFound",
+        "data": {
+          "steps": ["Travel(c8_5, c7_8)", "PickUp(p2)", "Travel(c7_8, c9_9)", "DropOff(p2, e2)"],
+          "cost": 19.0,
+          "expanded": 4
+        }
+      },
+      {
+        "kind": "TargetChosen",
+        "data": {
+          "target": "p2",
+          "switched": false,
+          "reason": "p2 is still the highest priority"
+        }
+      },
+      {
+        "kind": "PlanInvalidated",
+        "data": {
+          "reason": "Travel(c7_5, c7_8): route cell (8, 7) is now on fire",
+          "steps": ["Travel(c7_5, c7_8)", "PickUp(p2)", "Travel(c7_8, c9_9)", "DropOff(p2, e2)"],
+          "cursor": 0
+        }
+      },
+      {
+        "kind": "PlanAdopted",
+        "data": {
+          "change": "invalid",
+          "reason": "Travel(c7_5, c7_8): route cell (8, 7) is now on fire",
+          "steps": ["Travel(c8_5, c7_8)", "PickUp(p2)", "Travel(c7_8, c9_9)", "DropOff(p2, e2)"],
+          "cost": 19.0
+        }
+      }
+    ],
+    "metrics": {
+      "moves": 5,
+      "path_cost": 5.0,
+      "rescued": 0,
+      "plans": 3,
+      "replans": 2,
+      "searches": 27,
+      "nodes_expanded": 373,
+      "plan_nodes_expanded": 12,
+      "kb_base": 282,
+      "kb_derived": 27,
+      "kb_iterations": 6,
+      "timings_ms": {
+        "search": 0.15691600856371224,
+        "reason": 0.8521249983459711,
+        "plan": 0.14920797548256814,
+        "total": 1.149999996414408
+      }
+    }
+  },
+  "stuck": {
+    "tick": 0,
+    "status": "stuck",
+    "finished": true,
+    "state": {
+      "tick": 0,
+      "rows": 10,
+      "cols": 10,
+      "terrain": [
+        ["floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor"],
+        ["floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor"],
+        ["floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor"],
+        ["floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor"],
+        ["floor", "floor", "floor", "floor", "wall", "wall", "wall", "floor", "floor", "floor"],
+        ["floor", "floor", "floor", "floor", "wall", "floor", "wall", "floor", "floor", "floor"],
+        ["floor", "floor", "floor", "floor", "wall", "wall", "wall", "floor", "floor", "floor"],
+        ["floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor"],
+        ["floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor"],
+        ["floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor", "floor", "exit"]
+      ],
+      "fire": [],
+      "hot": [],
+      "agent": {
+        "pos": [0, 0],
+        "carrying": null
+      },
+      "people": [
+        {
+          "id": "p1",
+          "pos": [5, 5],
+          "risk": 4,
+          "urgency": 4,
+          "status": "WAITING"
+        }
+      ],
+      "exits": [
+        {
+          "id": "e1",
+          "pos": [9, 9],
+          "available": true,
+          "usable": true
+        }
+      ]
+    },
+    "facts": ["AgentAt(c0_0)", "Person(p1, c5_5)", "Waiting(p1)", "Urgent(p1)", "Exit(e1, c9_9)"],
+    "fact_counts": {
+      "Adjacent": 312,
+      "AgentAt": 1,
+      "Exit": 1,
+      "Person": 1,
+      "Urgent": 1,
+      "Waiting": 1
+    },
+    "derived": [],
+    "priorities": [],
+    "target": null,
+    "plan": [],
+    "route": [],
+    "plan_change": null,
+    "replan_reason": null,
+    "no_plan_reasons": [
+      "p1: A* found no route from the agent at (0, 0) to (5, 5) (91 cells expanded), so Reachable(p1) and Eligible(p1) do not hold"
+    ],
+    "trace": [
+      {
+        "kind": "RouteComputed",
+        "data": {
+          "src": [0, 0],
+          "dst": [5, 5],
+          "found": false,
+          "cost": null,
+          "expanded": 91,
+          "generated": 107
+        }
+      },
+      {
+        "kind": "NoValidPlan",
+        "data": {
+          "reasons": [
+            "p1: A* found no route from the agent at (0, 0) to (5, 5) (91 cells expanded), so Reachable(p1) and Eligible(p1) do not hold"
+          ]
+        }
+      }
+    ],
+    "metrics": {
+      "moves": 0,
+      "path_cost": 0.0,
+      "rescued": 0,
+      "plans": 0,
+      "replans": 0,
+      "searches": 1,
+      "nodes_expanded": 91,
+      "plan_nodes_expanded": 0,
+      "kb_base": 317,
+      "kb_derived": 0,
+      "kb_iterations": 1,
+      "timings_ms": {
+        "search": 0.1612920023035258,
+        "reason": 0.49158299225382507,
+        "plan": 0.0051670067477971315,
+        "total": 0.6927080103196204
+      }
+    }
+  },
+  "diff": {
+    "added": [
+      "Fire(c8_7)",
+      "Hot(c8_6)",
+      "Hot(c8_8)",
+      "Hot(c9_7)",
+      "Unsafe(c8_6)",
+      "Unsafe(c8_7)",
+      "Unsafe(c8_8)",
+      "Unsafe(c9_7)"
+    ],
+    "removed": []
+  },
+  "fireCell": [8, 7]
+}

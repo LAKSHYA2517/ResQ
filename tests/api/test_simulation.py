@@ -170,3 +170,19 @@ def test_run_flag_and_unknown_ids(client: TestClient, start: Start) -> None:
     assert client.post("/simulation/start", json={"scenario_id": "nope"}).status_code == 404
     done = start("impossible")["session_id"]  # already finished: nothing to run
     assert not client.post("/simulation/run", json={"session_id": done}).json()["running"]
+
+
+def test_log_lists_events_and_replan_reasons_from_the_trace(
+    client: TestClient, start: Start
+) -> None:
+    sid = start("dynamic_emergency")["session_id"]
+    for _ in range(4):
+        client.post("/simulation/step", json={"session_id": sid})
+    log = client.get("/simulation/log", params={"session_id": sid}).json()
+    at3 = [e for e in log if e["tick"] == 3]
+    kinds = [e["kind"] for e in at3]
+    assert kinds.index("event") < kinds.index("replan") < kinds.index("plan")
+    replan = next(e for e in at3 if e["kind"] == "replan")
+    assert replan["reason"] == "Travel(c1_1, c7_7): route cell (4, 4) is now on fire"
+    assert next(e for e in at3 if e["kind"] == "event")["text"].startswith("NEW_FIRE")
+    assert all(e["kind"] != "action" or e["text"].startswith(("PickUp", "DropOff")) for e in log)

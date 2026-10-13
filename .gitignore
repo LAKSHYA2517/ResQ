@@ -10,3 +10,5 @@ web/dist/
 web/coverage/
 *.tsbuildinfo
 .DS_Store
+web/test-results/
+web/playwright-report/

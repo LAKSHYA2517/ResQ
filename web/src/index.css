@@ -1,1 +1,59 @@
 @import "tailwindcss";
+
+/* "Mission control": dark, high contrast, readable on a projector at 1366x768. */
+@theme {
+  --color-bg: #0a1017;
+  --color-panel: #0f1822;
+  --color-raised: #16222f;
+  --color-line: #2a3b4f;
+  --color-ink: #eaf1f8;
+  --color-dim: #9db0c4;
+  --color-accent: #22d3ee;
+  --color-go: #4ade80;
+  --color-warn: #fbbf24;
+  --color-bad: #f87171;
+  --color-route: #fde047;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  overflow: hidden;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+[role="tab"]:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    /* biome-ignore lint/complexity/noImportantStyles: must beat utility classes */
+    animation: none !important;
+    /* biome-ignore lint/complexity/noImportantStyles: must beat utility classes */
+    transition: none !important;
+  }
+}

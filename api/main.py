@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 import resq
 
-from .routers import scenario, simulation
+from .routers import kb, scenario, search, simulation
 from .ws import router as ws_router
 
 app = FastAPI(title="ResQ-AI", version=resq.__version__)
@@ -28,4 +28,6 @@ def health() -> Health:
 
 app.include_router(scenario.router)
 app.include_router(simulation.router)
+app.include_router(kb.router)
+app.include_router(search.router)
 app.include_router(ws_router)

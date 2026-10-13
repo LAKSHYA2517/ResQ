@@ -376,3 +376,12 @@ class RunOut(BaseModel):
 
 class ErrorOut(BaseModel):
     detail: str
+
+
+class LogEntryOut(BaseModel):
+    """One line of the event log, derived from the engine trace of that tick."""
+
+    tick: int
+    kind: Literal["event", "rejected", "spread", "status", "action", "replan", "plan", "stuck"]
+    text: str
+    reason: str | None = None

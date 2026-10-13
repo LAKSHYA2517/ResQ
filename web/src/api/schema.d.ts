@@ -227,6 +227,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/simulation/log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Log */
+        get: operations["log_simulation_log_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/kb/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Rules
+         * @description The Horn rules the agent reasons with, exactly as the engine holds them.
+         */
+        get: operations["rules_kb_rules_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/search/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Compare
+         * @description Run algorithms x heuristics on the same problem (agent -> person at the chosen tick).
+         */
+        post: operations["search_compare_search_compare_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -240,6 +297,50 @@ export interface components {
             ];
             /** Carrying */
             carrying: string | null;
+        };
+        /** CompareIn */
+        CompareIn: {
+            /** Session Id */
+            session_id: string;
+            /** Tick */
+            tick?: number | null;
+            /** Target */
+            target?: string | null;
+            /**
+             * Runs
+             * @default [
+             *       {
+             *         "algorithm": "bfs"
+             *       },
+             *       {
+             *         "algorithm": "ucs"
+             *       },
+             *       {
+             *         "algorithm": "astar",
+             *         "heuristic": "manhattan"
+             *       }
+             *     ]
+             */
+            runs: components["schemas"]["RunSpec"][];
+        };
+        /** CompareOut */
+        CompareOut: {
+            /** Tick */
+            tick: number;
+            /** Source */
+            source: [
+                number,
+                number
+            ];
+            /** Target Id */
+            target_id: string;
+            /** Goal */
+            goal: [
+                number,
+                number
+            ];
+            /** Runs */
+            runs: components["schemas"]["SearchRunOut"][];
         };
         /** CostModelModel */
         CostModelModel: {
@@ -359,6 +460,23 @@ export interface components {
             ] | null;
             /** Field */
             field: string;
+        };
+        /**
+         * LogEntryOut
+         * @description One line of the event log, derived from the engine trace of that tick.
+         */
+        LogEntryOut: {
+            /** Tick */
+            tick: number;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "event" | "rejected" | "spread" | "status" | "action" | "replan" | "plan" | "stuck";
+            /** Text */
+            text: string;
+            /** Reason */
+            reason?: string | null;
         };
         /** MetricsOut */
         MetricsOut: {
@@ -490,6 +608,17 @@ export interface components {
             /** Breakdown */
             breakdown: string;
         };
+        /** RuleOut */
+        RuleOut: {
+            /** Name */
+            name: string;
+            /** Text */
+            text: string;
+            /** Body */
+            body: string[];
+            /** Head */
+            head: string;
+        };
         /** RunOut */
         RunOut: {
             /** Session Id */
@@ -498,6 +627,16 @@ export interface components {
             running: boolean;
             /** Speed */
             speed: number;
+        };
+        /** RunSpec */
+        RunSpec: {
+            /**
+             * Algorithm
+             * @enum {string}
+             */
+            algorithm: "bfs" | "ucs" | "astar";
+            /** Heuristic */
+            heuristic?: ("manhattan" | "euclidean" | "zero" | "weighted") | null;
         };
         /**
          * ScenarioModel
@@ -578,6 +717,43 @@ export interface components {
             args: {
                 [key: string]: unknown;
             };
+        };
+        /** SearchRunOut */
+        SearchRunOut: {
+            /** Label */
+            label: string;
+            /** Algorithm */
+            algorithm: string;
+            /** Heuristic */
+            heuristic: string | null;
+            /** Found */
+            found: boolean;
+            /** Cost */
+            cost: number | null;
+            /** Steps */
+            steps: number;
+            /** Expanded */
+            expanded: number;
+            /** Generated */
+            generated: number;
+            /** Max Frontier */
+            max_frontier: number;
+            /** Time Ms */
+            time_ms: number;
+            /** Optimal Vs Ucs */
+            optimal_vs_ucs: boolean | null;
+            /** Reason */
+            reason: string;
+            /** Path */
+            path: [
+                number,
+                number
+            ][];
+            /** Expansion Order */
+            expansion_order: [
+                number,
+                number
+            ][];
         };
         /** SessionIn */
         SessionIn: {
@@ -1158,6 +1334,117 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    log_simulation_log_get: {
+        parameters: {
+            query: {
+                session_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogEntryOut"][];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rules_kb_rules_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleOut"][];
+                };
+            };
+        };
+    };
+    search_compare_search_compare_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompareIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompareOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Conflict */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

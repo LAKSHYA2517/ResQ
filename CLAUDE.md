@@ -10,6 +10,7 @@ Full spec: [RESQ_AI_AGENT_BRIEF.md](RESQ_AI_AGENT_BRIEF.md) (section numbers bel
 | `make install` | `uv sync` + `pnpm --dir web install` |
 | `make check` | **The gate**: regenerate TS types → ruff + ruff format + mypy + biome → pytest (≥90% cov) + vitest → web build |
 | `make test` | pytest + vitest only |
+| `make e2e` | Playwright acceptance tests in `tests/e2e` (installs Chromium; starts the API and web app if they are not running) |
 | `make lint` | ruff, ruff format --check, mypy (strict), biome |
 | `make types` | Regenerate `web/src/api/schema.d.ts` from the FastAPI OpenAPI schema |
 | `make dev` | API `localhost:8000` + web `localhost:5173`, one command, Ctrl-C stops both |
@@ -27,6 +28,8 @@ engine/resq/   pure Python, NO web imports (enforced by tests/engine/test_smoke.
   (additions to the brief's layout: world/session.py = world tick + events; search/router.py = A* route cache)
 api/           FastAPI thin layer over the engine (main.py, routers/, schemas.py, sessions.py, ws.py)
 web/           Vite + React 19 + TS strict + Tailwind v4 (src/api/schema.d.ts is generated, never hand-edit)
+               src/store (Zustand: sim mirrors the API, builder, ui) · src/lib (draft ops, canvas drawing) ·
+               src/components · src/panels · src/demo.ts (guided demo steps)
 scenarios/     *.json scenario files (schema: brief §6.1)
 tests/         engine/ api/ e2e/
 docs/          ARCHITECTURE, SYLLABUS_MAP, VIVA_QA, ETHICS, DEMO_SCRIPT (written in P6; ETHICS in P5)
@@ -55,6 +58,8 @@ editable into `.venv` via hatch, so `import resq` / `import api` work from anywh
 - Wall-clock numbers live only in fields declared `compare=False` (`Metrics.timings_ms`, `Plan.time_ms`), never in trace events.
 - Trace events hold JSON-friendly primitives only, and no field named `kind`.
 - `api/schemas.py` copies engine values; it may group and count, never compute a result.
+- The frontend never computes a route, plan, fact or metric: it renders API responses. Client-side code may format, filter and group; if a number is on screen it came from an engine call.
+- Frontend tests that need a snapshot use `web/src/test/fixtures.json` (real engine output), not hand-written objects.
 - `mypy --strict` clean on `engine/`; ruff line length 100; TS `strict` + `noUncheckedIndexedAccess`.
 - Tiers: MUST and SHOULD are in scope; COULD only after P6 is done and green.
 - Shortcuts with a known ceiling get a `ponytail:` comment naming the ceiling and the upgrade path.

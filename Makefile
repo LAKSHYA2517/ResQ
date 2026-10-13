@@ -1,4 +1,4 @@
-.PHONY: install dev check test lint types bench demo
+.PHONY: install dev check test lint types e2e bench demo
 
 install:
 	uv sync
@@ -18,6 +18,11 @@ lint:
 test:
 	uv run pytest
 	pnpm --dir web test
+
+# Browser acceptance tests (Chromium via Playwright; starts API + web unless already running).
+e2e:
+	pnpm --dir web exec playwright install chromium
+	NODE_PATH=$(CURDIR)/web/node_modules pnpm --dir web exec playwright test
 
 # Single local gate: types sync, lint, python types, tests, frontend build.
 check: types lint test

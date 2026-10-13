@@ -1,6 +1,16 @@
 from fastapi import APIRouter, HTTPException, Query
 
-from resq.agent.loop import replay
+from resq.agent.loop import Snapshot, replay
+from resq.trace import (
+    ActionExecuted,
+    EventApplied,
+    EventRejected,
+    FireSpread,
+    NoValidPlan,
+    PersonStatusChanged,
+    PlanAdopted,
+    PlanInvalidated,
+)
 from resq.world.events import EventError, EventType
 
 from ..schemas import (
@@ -8,6 +18,7 @@ from ..schemas import (
     EventIn,
     EventOut,
     FactDiff,
+    LogEntryOut,
     RunOut,
     SessionIn,
     SessionOut,
@@ -90,3 +101,47 @@ async def replay_tick(tick: int, session_id: str, fresh: bool = False) -> Snapsh
     if fresh:
         return snapshot_out(replay(sim.scenario, tuple(sim.log), tick)[tick])
     return snapshot_out(sim.history[tick])
+
+
+def log_entries(history: list[Snapshot]) -> list[LogEntryOut]:
+    """The event log: what happened at each tick and why the plan changed, straight from the
+    traces the engine produced. Plain moves are left out (one per tick would drown the log)."""
+    out: list[LogEntryOut] = []
+    for snap in history:
+        t = snap.tick
+        for e in snap.trace:
+            if isinstance(e, EventApplied):
+                out.append(LogEntryOut(tick=t, kind="event", text=f"{e.event_type} {e.args}"))
+            elif isinstance(e, EventRejected):
+                text = f"{e.event_type} {e.args} refused"
+                out.append(LogEntryOut(tick=t, kind="rejected", text=text, reason=e.reason))
+            elif isinstance(e, FireSpread):
+                out.append(
+                    LogEntryOut(
+                        tick=t, kind="spread", text=f"fire spread to {len(e.ignited)} cell(s)"
+                    )
+                )
+            elif isinstance(e, PersonStatusChanged):
+                text = f"{e.person_id}: {e.old} → {e.new}"
+                out.append(LogEntryOut(tick=t, kind="status", text=text))
+            elif isinstance(e, ActionExecuted) and e.action in ("PickUp", "DropOff"):
+                out.append(LogEntryOut(tick=t, kind="action", text=e.detail))
+            elif isinstance(e, PlanInvalidated):
+                out.append(
+                    LogEntryOut(tick=t, kind="replan", text="plan invalidated", reason=e.reason)
+                )
+            elif isinstance(e, PlanAdopted):
+                text = f"new plan ({e.change}): {' → '.join(e.steps)}  cost {e.cost:g}"
+                out.append(LogEntryOut(tick=t, kind="plan", text=text, reason=e.reason))
+            elif isinstance(e, NoValidPlan):
+                out.append(
+                    LogEntryOut(
+                        tick=t, kind="stuck", text="no valid plan", reason="; ".join(e.reasons)
+                    )
+                )
+    return out
+
+
+@router.get("/log")
+async def log(session_id: str) -> list[LogEntryOut]:
+    return log_entries(store.session(session_id).sim.history)
