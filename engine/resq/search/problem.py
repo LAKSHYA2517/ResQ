@@ -1,8 +1,9 @@
 """Search problem interface, grid problem, and the result record."""
 
 from collections.abc import Callable, Collection, Hashable, Iterable, Iterator
+from copy import copy
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Protocol, Self
 
 from ..world.grid import Cell, moves
 from ..world.state import State
@@ -83,6 +84,12 @@ class GridProblem:
                 base = cost_model.terrain_cost(state.terrain_at(cell))
                 if base is not None and cell not in state.fire:
                     self.step_cost[cell] = base + (cost_model.hot_extra if cell in state.hot else 0)
+
+    def retarget(self, start: Cell, goals: Collection[Cell]) -> Self:
+        """Same world and costs, different endpoints (shares the step-cost table)."""
+        other = copy(self)
+        other.initial, other.goals = start, frozenset(goals)
+        return other
 
     def is_goal(self, state: Cell) -> bool:
         return state in self.goals

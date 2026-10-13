@@ -8,7 +8,7 @@ from resq.trace import EventApplied, EventRejected, FireSpread, PersonStatusChan
 from resq.world.events import Event, EventError, EventType, apply_event
 from resq.world.fire import settle, spread
 from resq.world.scenarios import Scenario, initial_state
-from resq.world.session import advance
+from resq.world.session import advance, start
 from resq.world.state import Status
 from resq.world.terrain import Terrain
 
@@ -119,19 +119,22 @@ def test_wall_cannot_go_on_fire(make_scenario: Callable[..., Scenario]) -> None:
         apply_event(state, Event(0, EventType.OBSTACLE_ADDED, {"pos": [1, 1]}))
 
 
-def test_advance_traces_events_spread_and_rejections(
+def test_events_belong_to_their_tick_and_conflicts_are_traced(
     make_scenario: Callable[..., Scenario],
 ) -> None:
     scenario = make_scenario(
         fire=[[3, 3]],
         params={"p_spread": 1.0},
-        scripted_events=[{"tick": 0, "type": "EXIT_BLOCKED", "args": {"exit": "e1"}}],
+        scripted_events=[
+            {"tick": 0, "type": "EXIT_BLOCKED", "args": {"exit": "e1"}},
+            {"tick": 1, "type": "EXIT_REOPENED", "args": {"exit": "e1"}},
+        ],
     )
-    state = initial_state(scenario)
-    bad = Event(0, EventType.NEW_FIRE, {"pos": [0, 0]})
+    bad = Event(0, EventType.NEW_FIRE, {"pos": [0, 0]})  # the agent's cell
+    state, trace = start(scenario, (bad,))
+    assert [type(t) for t in trace] == [EventApplied, EventRejected]
+    assert state.tick == 0 and not state.exit("e1").available
     state, trace = advance(scenario, state, (bad,))
-    kinds = [type(t) for t in trace]
-    assert kinds == [EventApplied, EventRejected, FireSpread]
-    assert state.tick == 1
-    assert not state.exit("e1").available
+    assert [type(t) for t in trace] == [FireSpread, EventApplied]
+    assert state.tick == 1 and state.exit("e1").available  # the tick-1 event is in state 1
     assert (3, 2) in state.fire

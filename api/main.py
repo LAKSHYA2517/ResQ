@@ -4,6 +4,9 @@ from pydantic import BaseModel
 
 import resq
 
+from .routers import scenario, simulation
+from .ws import router as ws_router
+
 app = FastAPI(title="ResQ-AI", version=resq.__version__)
 app.add_middleware(
     CORSMiddleware,
@@ -21,3 +24,8 @@ class Health(BaseModel):
 @app.get("/health")
 def health() -> Health:
     return Health(status="ok", version=resq.__version__)
+
+
+app.include_router(scenario.router)
+app.include_router(simulation.router)
+app.include_router(ws_router)

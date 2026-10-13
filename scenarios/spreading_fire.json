@@ -57,8 +57,8 @@
     }
   ],
   "scripted_events": [],
-  "seed": 11,
+  "seed": 3,
   "params": {
-    "p_spread": 0.3
+    "p_spread": 0.08
   }
 }

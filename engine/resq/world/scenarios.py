@@ -23,9 +23,15 @@ MIN_SIDE, MAX_SIDE = 5, 30
 
 @dataclass(frozen=True)
 class Weights:
+    """Priority(P) = w_r*Risk + w_u*Urgency - w_d*PathCost. Simulation values, not medical."""
+
     w_r: float = 5.0
     w_u: float = 3.0
     w_d: float = 1.0
+    gamma: float = 0.1  # urgency gained per tick spent waiting
+    urgency_cap: float = 5.0
+    urgent_threshold: float = 3.0  # Urgent(P) is asserted when urgency reaches this
+    delta: float = 2.0  # hysteresis margin: switch target only if better by more than this
 
 
 @dataclass(frozen=True)

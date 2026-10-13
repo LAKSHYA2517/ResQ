@@ -36,9 +36,10 @@ src = [".", "engine"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+allowed-confusables = ["×", "−"]  # used on purpose in priority breakdowns
 
 [tool.mypy]
-files = ["engine", "api", "tests"]
+files = ["engine", "api", "tests", "scripts"]
 strict = true
 mypy_path = "engine"
 explicit_package_bases = true

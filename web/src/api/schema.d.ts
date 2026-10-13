@@ -21,16 +21,697 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/scenarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Scenarios */
+        get: operations["list_scenarios_scenarios_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/scenario/{scenario_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Scenario */
+        get: operations["get_scenario_scenario__scenario_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/scenario/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate Scenario
+         * @description Body: scenario JSON (shape of ``ScenarioModel``). Accepts anything, so that every problem
+         *     comes back as a readable issue with its cell instead of a schema error.
+         */
+        post: operations["validate_scenario_scenario_validate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/scenario": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Scenario
+         * @description Register a custom scenario for this server run (not written to disk).
+         */
+        post: operations["create_scenario_scenario_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/simulation/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start */
+        post: operations["start_simulation_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/simulation/step": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Step */
+        post: operations["step_simulation_step_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/simulation/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run
+         * @description Start autoplay at ``speed`` ticks per second (``speed=0`` pauses). Snapshots are streamed
+         *     on ``/ws/simulation/{id}``; autoplay only advances while a client is connected there.
+         */
+        post: operations["run_simulation_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/simulation/event": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Event
+         * @description Inject an event into the current tick. The response carries the re-deliberated snapshot,
+         *     the fact diff the event caused and, if the plan had to change, the reason.
+         */
+        post: operations["event_simulation_event_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/simulation/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reset */
+        post: operations["reset_simulation_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/simulation/state": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** State */
+        get: operations["state_simulation_state_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/simulation/replay/{tick}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Replay Tick
+         * @description Time travel. By default the stored snapshot; ``fresh=true`` rebuilds it from nothing but
+         *     the scenario, seed and event log, which must give the same answer.
+         */
+        get: operations["replay_tick_simulation_replay__tick__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AgentOut */
+        AgentOut: {
+            /** Pos */
+            pos: [
+                number,
+                number
+            ];
+            /** Carrying */
+            carrying: string | null;
+        };
+        /** CostModelModel */
+        CostModelModel: {
+            /** Floor */
+            floor: number;
+            /** Rubble */
+            rubble: number;
+            /** Exit */
+            exit: number;
+            /** Hot Extra */
+            hot_extra: number;
+            /** Pickup */
+            pickup: number;
+            /** Dropoff */
+            dropoff: number;
+        };
+        /** DerivationOut */
+        DerivationOut: {
+            /** Fact */
+            fact: string;
+            /** Rule */
+            rule: string;
+            /** Bindings */
+            bindings: {
+                [key: string]: string;
+            };
+            /** Premises */
+            premises: string[];
+            /** Iteration */
+            iteration: number;
+        };
+        /** ErrorOut */
+        ErrorOut: {
+            /** Detail */
+            detail: string;
+        };
+        /** EventIn */
+        EventIn: {
+            /** Session Id */
+            session_id: string;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "NEW_FIRE" | "FIRE_EXTINGUISHED" | "EXIT_BLOCKED" | "EXIT_REOPENED" | "OBSTACLE_ADDED" | "OBSTACLE_REMOVED";
+            /**
+             * Args
+             * @default {}
+             */
+            args: {
+                [key: string]: unknown;
+            };
+        };
+        /** EventOut */
+        EventOut: {
+            snapshot: components["schemas"]["SnapshotOut"];
+            diff: components["schemas"]["FactDiff"];
+            /** Replan Reason */
+            replan_reason: string | null;
+        };
+        /** ExitModel */
+        ExitModel: {
+            /** Id */
+            id: string;
+            /** Pos */
+            pos: [
+                number,
+                number
+            ];
+            /**
+             * Available
+             * @default true
+             */
+            available: boolean;
+        };
+        /** ExitOut */
+        ExitOut: {
+            /** Id */
+            id: string;
+            /** Pos */
+            pos: [
+                number,
+                number
+            ];
+            /** Available */
+            available: boolean;
+            /** Usable */
+            usable: boolean;
+        };
+        /** FactDiff */
+        FactDiff: {
+            /** Added */
+            added: string[];
+            /** Removed */
+            removed: string[];
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
         /** Health */
         Health: {
             /** Status */
             status: string;
             /** Version */
             version: string;
+        };
+        /** IssueOut */
+        IssueOut: {
+            /** Message */
+            message: string;
+            /** Cell */
+            cell: [
+                number,
+                number
+            ] | null;
+            /** Field */
+            field: string;
+        };
+        /** MetricsOut */
+        MetricsOut: {
+            /** Moves */
+            moves: number;
+            /** Path Cost */
+            path_cost: number;
+            /** Rescued */
+            rescued: number;
+            /** Plans */
+            plans: number;
+            /** Replans */
+            replans: number;
+            /** Searches */
+            searches: number;
+            /** Nodes Expanded */
+            nodes_expanded: number;
+            /** Plan Nodes Expanded */
+            plan_nodes_expanded: number;
+            /** Kb Base */
+            kb_base: number;
+            /** Kb Derived */
+            kb_derived: number;
+            /** Kb Iterations */
+            kb_iterations: number;
+            /** Timings Ms */
+            timings_ms: {
+                [key: string]: number;
+            };
+        };
+        /** ParamsModel */
+        ParamsModel: {
+            /** P Spread */
+            p_spread: number;
+            weights: components["schemas"]["WeightsModel"];
+            cost_model: components["schemas"]["CostModelModel"];
+        };
+        /** PersonModel */
+        PersonModel: {
+            /** Id */
+            id: string;
+            /** Pos */
+            pos: [
+                number,
+                number
+            ];
+            /**
+             * Risk
+             * @default 0
+             */
+            risk: number;
+            /**
+             * Urgency
+             * @default 0
+             */
+            urgency: number;
+        };
+        /** PersonOut */
+        PersonOut: {
+            /** Id */
+            id: string;
+            /** Pos */
+            pos: [
+                number,
+                number
+            ];
+            /** Risk */
+            risk: number;
+            /** Urgency */
+            urgency: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "WAITING" | "CARRIED" | "EVACUATED" | "TRAPPED";
+        };
+        /** PlanChangeOut */
+        PlanChangeOut: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "initial" | "next_goal" | "invalid" | "target_switch" | "cheaper";
+            /** Reason */
+            reason: string;
+            /** Is Replan */
+            is_replan: boolean;
+            /** Old Steps */
+            old_steps: string[];
+            /** Old Cursor */
+            old_cursor: number;
+        };
+        /** PlanStepOut */
+        PlanStepOut: {
+            /** Label */
+            label: string;
+            /**
+             * Name
+             * @enum {string}
+             */
+            name: "Travel" | "PickUp" | "DropOff";
+            /** Params */
+            params: string[];
+            /** Cost */
+            cost: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "done" | "current" | "pending";
+            /** Route */
+            route: [
+                number,
+                number
+            ][];
+        };
+        /** PriorityOut */
+        PriorityOut: {
+            /** Person Id */
+            person_id: string;
+            /** Risk */
+            risk: number;
+            /** Urgency */
+            urgency: number;
+            /** Path Cost */
+            path_cost: number;
+            /** Score */
+            score: number;
+            /** Breakdown */
+            breakdown: string;
+        };
+        /** RunOut */
+        RunOut: {
+            /** Session Id */
+            session_id: string;
+            /** Running */
+            running: boolean;
+            /** Speed */
+            speed: number;
+        };
+        /**
+         * ScenarioModel
+         * @description Scenario JSON (brief 6.1). ``terrain`` rows use '.' floor, 'r' rubble, '#' wall.
+         */
+        ScenarioModel: {
+            /** Name */
+            name: string;
+            /** Grid Size */
+            grid_size: [
+                number,
+                number
+            ];
+            /** Terrain */
+            terrain: string[];
+            /** Agent */
+            agent: [
+                number,
+                number
+            ];
+            /** People */
+            people: components["schemas"]["PersonModel"][];
+            /** Fire */
+            fire: [
+                number,
+                number
+            ][];
+            /** Exits */
+            exits: components["schemas"]["ExitModel"][];
+            /** Scripted Events */
+            scripted_events: components["schemas"]["ScriptedEventModel"][];
+            /** Seed */
+            seed: number;
+            params: components["schemas"]["ParamsModel"];
+        };
+        /** ScenarioOut */
+        ScenarioOut: {
+            /** Id */
+            id: string;
+            /** Predefined */
+            predefined: boolean;
+            scenario: components["schemas"]["ScenarioModel"];
+        };
+        /** ScenarioSummary */
+        ScenarioSummary: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Predefined */
+            predefined: boolean;
+            /** Rows */
+            rows: number;
+            /** Cols */
+            cols: number;
+            /** People */
+            people: number;
+            /** Exits */
+            exits: number;
+            /** P Spread */
+            p_spread: number;
+            /** Scripted Events */
+            scripted_events: number;
+        };
+        /** ScriptedEventModel */
+        ScriptedEventModel: {
+            /** Tick */
+            tick: number;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "NEW_FIRE" | "FIRE_EXTINGUISHED" | "EXIT_BLOCKED" | "EXIT_REOPENED" | "OBSTACLE_ADDED" | "OBSTACLE_REMOVED";
+            /**
+             * Args
+             * @default {}
+             */
+            args: {
+                [key: string]: unknown;
+            };
+        };
+        /** SessionIn */
+        SessionIn: {
+            /** Session Id */
+            session_id: string;
+        };
+        /** SessionOut */
+        SessionOut: {
+            /** Session Id */
+            session_id: string;
+            /** Scenario Id */
+            scenario_id: string;
+            /** Seed */
+            seed: number;
+            snapshot: components["schemas"]["SnapshotOut"];
+        };
+        /** SnapshotOut */
+        SnapshotOut: {
+            /** Tick */
+            tick: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "running" | "complete" | "stuck";
+            /** Finished */
+            finished: boolean;
+            state: components["schemas"]["StateOut"];
+            /** Facts */
+            facts: string[];
+            /** Fact Counts */
+            fact_counts: {
+                [key: string]: number;
+            };
+            /** Derived */
+            derived: components["schemas"]["DerivationOut"][];
+            /** Priorities */
+            priorities: components["schemas"]["PriorityOut"][];
+            /** Target */
+            target: string | null;
+            /** Plan */
+            plan: components["schemas"]["PlanStepOut"][];
+            /** Route */
+            route: [
+                number,
+                number
+            ][];
+            plan_change: components["schemas"]["PlanChangeOut"] | null;
+            /** Replan Reason */
+            replan_reason: string | null;
+            /** No Plan Reasons */
+            no_plan_reasons: string[];
+            /** Trace */
+            trace: components["schemas"]["TraceEventOut"][];
+            metrics: components["schemas"]["MetricsOut"];
+        };
+        /** StartIn */
+        StartIn: {
+            /** Scenario Id */
+            scenario_id: string;
+            /** Seed */
+            seed?: number | null;
+        };
+        /** StateOut */
+        StateOut: {
+            /** Tick */
+            tick: number;
+            /** Rows */
+            rows: number;
+            /** Cols */
+            cols: number;
+            /** Terrain */
+            terrain: ("floor" | "rubble" | "wall" | "exit")[][];
+            /** Fire */
+            fire: [
+                number,
+                number
+            ][];
+            /** Hot */
+            hot: [
+                number,
+                number
+            ][];
+            agent: components["schemas"]["AgentOut"];
+            /** People */
+            people: components["schemas"]["PersonOut"][];
+            /** Exits */
+            exits: components["schemas"]["ExitOut"][];
+        };
+        /** TraceEventOut */
+        TraceEventOut: {
+            /** Kind */
+            kind: string;
+            /** Data */
+            data: {
+                [key: string]: unknown;
+            };
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
+        };
+        /** ValidationOut */
+        ValidationOut: {
+            /** Valid */
+            valid: boolean;
+            /** Issues */
+            issues: components["schemas"]["IssueOut"][];
+        };
+        /** WeightsModel */
+        WeightsModel: {
+            /** W R */
+            w_r: number;
+            /** W U */
+            w_u: number;
+            /** W D */
+            w_d: number;
+            /** Gamma */
+            gamma: number;
+            /** Urgency Cap */
+            urgency_cap: number;
+            /** Urgent Threshold */
+            urgent_threshold: number;
+            /** Delta */
+            delta: number;
         };
     };
     responses: never;
@@ -57,6 +738,440 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    list_scenarios_scenarios_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScenarioSummary"][];
+                };
+            };
+        };
+    };
+    get_scenario_scenario__scenario_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scenario_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScenarioOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validate_scenario_scenario_validate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_scenario_scenario_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScenarioOut"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationOut"];
+                };
+            };
+        };
+    };
+    start_simulation_start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    step_simulation_step_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SnapshotOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_simulation_run_post: {
+        parameters: {
+            query?: {
+                speed?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    event_simulation_event_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_simulation_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SnapshotOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    state_simulation_state_get: {
+        parameters: {
+            query: {
+                session_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SnapshotOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    replay_tick_simulation_replay__tick__get: {
+        parameters: {
+            query: {
+                session_id: string;
+                fresh?: boolean;
+            };
+            header?: never;
+            path: {
+                tick: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SnapshotOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -19,3 +19,13 @@ def moves(cell: Cell, rows: int, cols: int) -> Iterator[tuple[str, Cell]]:
         n = (cell[0] + dr, cell[1] + dc)
         if in_bounds(n, rows, cols):
             yield name, n
+
+
+def cell_name(cell: Cell) -> str:
+    """Logic constant for a cell: ``(3, 4)`` -> ``"c3_4"``."""
+    return f"c{cell[0]}_{cell[1]}"
+
+
+def name_cell(name: str) -> Cell:
+    r, c = name[1:].split("_")
+    return (int(r), int(c))

@@ -21,6 +21,8 @@ class CostModel:
     rubble: float = 3.0
     exit: float = 1.0
     hot_extra: float = 4.0
+    pickup: float = 1.0  # abstract actions: one tick each
+    dropoff: float = 1.0
 
     def terrain_cost(self, terrain: Terrain) -> float | None:
         """Base entering cost, or ``None`` if the terrain is blocked."""

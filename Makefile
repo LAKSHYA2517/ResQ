@@ -33,5 +33,6 @@ dev:
 bench:
 	@echo "bench: not implemented until Phase 5"; exit 1
 
+# Headless run of the full workflow (offline). Extra flags: make demo ARGS="--scenario triage_dilemma"
 demo:
-	@echo "demo: not implemented until Phase 2"; exit 1
+	uv run python scripts/demo_headless.py $(ARGS)

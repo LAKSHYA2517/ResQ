@@ -45,12 +45,24 @@ P1 decisions worth remembering (details go in `docs/ARCHITECTURE.md` in P6):
 - **P4 tuning to do:** in Showcase, BFS already matches UCS on the far critical person p2 (cost 13). When DFS/Greedy land, check they differ there for demo step 7; if not, add rubble on p2's direct route.
 
 ## P2 — Original plan complete
-- [ ] Logic: terms, unification, KB, forward chaining with provenance, core rules
-- [ ] Priority function with breakdown + hysteresis δ
-- [ ] STRIPS + forward planner; Travel cost from A*
-- [ ] Agent loop (OBSERVE … RE-PLAN), events, replanning with reasons, monitor
-- [ ] API: scenario / simulation / replay endpoints + WS `/ws/simulation/{id}`
-- [ ] `make demo` headless run of the full workflow; original tests 4–9 green
+- [x] Logic: terms + parser, unification (MGU, occurs check), KB with provenance, forward chaining to a fixpoint, the 10 core rules
+- [x] Priority function with breakdown + hysteresis δ (`decision/priority.py`)
+- [x] STRIPS + forward planner (A* over states, admissible heuristic); Travel cost and path from A*
+- [x] Agent loop (OBSERVE … RE-PLAN), execution monitor, events, replanning with reasons
+- [x] API: scenario / simulation / replay endpoints + WS `/ws/simulation/{id}`; OpenAPI → TS types regenerated
+- [x] `make demo` headless run of the full workflow; original tests 4–9 green (`make check`: 185 pytest, 99% engine coverage; 14/14 mutation spot-checks killed)
+
+P2 decisions worth remembering:
+- **Timeline rule:** an event dated tick t is part of snapshot t. Tick t→t+1 = ACT → fire spread → clock → scripted events of t+1 → deliberate. A *user* event lands on the current tick and triggers a second deliberation of that tick (`react`), so the agent's just-made plan is re-validated and the replan reason is real even at tick 0. Replay reproduces this exactly (`replay(scenario, log, t) == history`).
+- **Reasoning ↔ search loop:** A* (agent → each waiting person) gives `Reachable(P)` and the real path cost; `Urgent(P)` is asserted when time-grown urgency ≥ threshold. Both enter the KB as base facts because Horn clauses over symbols cannot search or do arithmetic. `Eligible(P)` is then *derived*.
+- **Closed world, no negation in rules.** "Exit is open" is the query `not Unavailable(e)` (absence from the KB), never a rule body. `Hot(X)` in the KB also holds for burning cells next to other burning cells (no way to say "and not Fire(X)"); the cost model uses `State.hot`, which excludes fire.
+- **Plan = single-target** `[Travel, PickUp, Travel, DropOff]` chosen by the planner (it picks the exit). The planner itself is general (multi-person goals work and are tested); P4's `/plan/compare` and the order optimizer use that.
+- **When the agent replans:** (1) `invalid`: a stored route cell is blocked or a STRIPS precondition fails against live facts (no search needed to detect); (2) `target_switch`: hysteresis says another person is better by more than δ; (3) `cheaper`: the world layout changed and a strictly cheaper plan exists. With a static world there are zero planner calls between events.
+- **Metrics are a pure function of the run** (the A* cache lives for one deliberation only), so replay reproduces them too; only `timings_ms` is excluded from equality.
+- Snapshots carry decision-level traces (routes computed, plan found, target chosen, plan invalidated/adopted, action, events). Per-node search/plan traces and per-rule firings are returned by the functions themselves and will be served on demand by P4 endpoints; derivations (with rule, bindings, premises, pass number) are always in the snapshot.
+- API omits the static `Adjacent(…)` facts from `facts` (they are counted in `fact_counts`); everything else is passed through untouched.
+- Scenario tuning (re-check after any change to agent behaviour): Showcase `p_spread 0.04, seed 24` → 3/3 rescued with `cheaper`, `invalid`, `cheaper` replans; Spreading Fire `p_spread 0.08, seed 3` → 1/2 rescued, ends stuck while carrying p1 (no route to the exit).
+- Trace event dataclasses must not have a field called `kind` (it is the base-class property).
 
 ## P3 — Frontend core
 - [ ] Scenario builder, canvas, controls, timeline scrubber
