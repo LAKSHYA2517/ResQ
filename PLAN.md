@@ -26,14 +26,23 @@ Brief §10 lists them in this order; P1/P2 acceptance refers to these numbers.
 - [x] `make check` passes on the empty skeleton; `make dev` serves API :8000 and web :5173
 
 ## P1 — World, scenarios, search basics, fire
-- [ ] `trace.py` typed events
-- [ ] World model: grid, terrain (FLOOR 1 / RUBBLE 3 / WALL / EXIT), FIRE blocked, derived HOT (+4), entities, person status
-- [ ] Scenario JSON schema + validation (human-readable errors with cell positions)
-- [ ] Fire dynamics: seeded stochastic spread, `p_spread = 0` = static
-- [ ] Event-sourced session: scenario + seed + log, replay reproduces identical snapshots
-- [ ] Search: BFS, UCS, A* under one `search()` interface; `manhattan × min_cost` heuristic + consistency check
-- [ ] All 9 scenarios in `scenarios/*.json`
-- [ ] Original tests 1–3, 7, 10 green; replay test green
+- [x] `trace.py` typed events
+- [x] World model: grid, terrain (FLOOR 1 / RUBBLE 3 / WALL / EXIT), FIRE blocked, derived HOT (+4), entities, person status
+- [x] Scenario JSON schema + validation (human-readable errors with cell positions)
+- [x] Fire dynamics: seeded stochastic spread, `p_spread = 0` = static
+- [x] Event-sourced replay (`world/session.py`): scenario + seed + log reproduces identical snapshots
+- [x] Search: BFS, UCS, A* under one `search()` interface; `manhattan × min_cost` heuristic + `check_heuristic`
+- [x] All 9 scenarios in `scenarios/*.json`
+- [x] Original tests 1–3, 7, 10 green; replay test green (`make check`: 92 pytest, 97% engine coverage)
+
+P1 decisions worth remembering (details go in `docs/ARCHITECTURE.md` in P6):
+- Entering a cell costs terrain cost (+4 if Hot); exits are passable cells, `EXIT_BLOCKED` only makes them unusable as drop-offs.
+- Tick order in `advance`: events due at this tick (scripted, then logged) → fire spread → status settle → `tick += 1`. P2 inserts the agent's ACT before events.
+- RNG per tick is `Random(f"{seed}:{tick}")`, so any tick is reproducible without replaying the RNG stream.
+- A `WAITING` person on a fire cell becomes `TRAPPED` (and reverts if the fire is extinguished). "Cut off" trapping is derived by the KB from search in P2.
+- Search tie-break: lowest f, then lowest h, then first generated; successors in U, D, L, R order. BFS tests the goal at generation (AIMA); UCS/A* at expansion. Closed nodes are re-opened if g improves, so A* is optimal for any admissible h.
+- Events that conflict with the state are *rejected with a trace entry* rather than raising, so a scripted event can never crash a run.
+- **P4 tuning to do:** in Showcase, BFS already matches UCS on the far critical person p2 (cost 13). When DFS/Greedy land, check they differ there for demo step 7; if not, add rubble on p2's direct route.
 
 ## P2 — Original plan complete
 - [ ] Logic: terms, unification, KB, forward chaining with provenance, core rules

@@ -23,6 +23,7 @@ Format Python: `uv run ruff format .`; frontend: `pnpm --dir web exec biome chec
 ```
 engine/resq/   pure Python, NO web imports (enforced by tests/engine/test_smoke.py)
   world/ search/ logic/ uncertainty/ planning/ decision/ agent/   trace.py
+  (world/session.py = advance()/replay(), the event-sourced tick; not in the brief's layout)
 api/           FastAPI thin layer over the engine (main.py, routers/, schemas.py, sessions.py, ws.py)
 web/           Vite + React 19 + TS strict + Tailwind v4 (src/api/schema.d.ts is generated, never hand-edit)
 scenarios/     *.json scenario files (schema: brief §6.1)
