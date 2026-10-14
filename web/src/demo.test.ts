@@ -19,6 +19,7 @@ describe("guided demo", () => {
       "Fact diff and the replan",
       "Adversarial fire",
       "Final outcome",
+      "Agent-type benchmark",
       "Impossible scenario",
     ]);
   });

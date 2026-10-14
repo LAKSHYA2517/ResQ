@@ -244,6 +244,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/simulation/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Report */
+        get: operations["report_simulation_report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/kb/rules": {
         parameters: {
             query?: never;
@@ -428,6 +445,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/plan/graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Plan Graph
+         * @description Planning graph for the current goal: proposition and action levels with mutex links.
+         */
+        post: operations["plan_graph_plan_graph_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plan/htn": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Plan Htn
+         * @description HTN decomposition of the current goal into primitive actions, as a tree.
+         */
+        post: operations["plan_htn_plan_htn_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/agent/profile": {
         parameters: {
             query?: never;
@@ -443,6 +500,26 @@ export interface paths {
         get: operations["profile_agent_profile_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bench/agents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bench Agents
+         * @description Simple-reflex vs goal-based vs utility-based agents on identical, seeded scenarios.
+         */
+        post: operations["bench_agents_bench_agents_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -540,6 +617,70 @@ export interface components {
             p_trapped: number;
             /** Risk */
             risk: number;
+        };
+        /** BenchIn */
+        BenchIn: {
+            /** Scenario Ids */
+            scenario_ids?: string[] | null;
+            /**
+             * Random
+             * @default 20
+             */
+            random: number;
+            /**
+             * Seed
+             * @default 1
+             */
+            seed: number;
+        };
+        /** BenchOut */
+        BenchOut: {
+            /** Summaries */
+            summaries: components["schemas"]["BenchSummaryOut"][];
+            /** Rows */
+            rows: components["schemas"]["BenchRowOut"][];
+            /** Expected Order Holds */
+            expected_order_holds: boolean;
+        };
+        /** BenchRowOut */
+        BenchRowOut: {
+            /** Agent */
+            agent: string;
+            /** Scenario */
+            scenario: string;
+            /** Rescued */
+            rescued: number;
+            /** People */
+            people: number;
+            /** Cost */
+            cost: number;
+            /** Ticks */
+            ticks: number;
+            /** Replans */
+            replans: number;
+            /** Finished */
+            finished: boolean;
+        };
+        /** BenchSummaryOut */
+        BenchSummaryOut: {
+            /** Agent */
+            agent: string;
+            /** Scenarios */
+            scenarios: number;
+            /** Rescued */
+            rescued: number;
+            /** People */
+            people: number;
+            /** Rescued Pct */
+            rescued_pct: number;
+            /** Mean Cost */
+            mean_cost: number;
+            /** Mean Ticks */
+            mean_ticks: number;
+            /** Cost Per Rescue */
+            cost_per_rescue: number | null;
+            /** Replans */
+            replans: number;
         };
         /** CompareIn */
         CompareIn: {
@@ -774,6 +915,25 @@ export interface components {
                 number
             ][][];
         };
+        /** GraphLevelOut */
+        GraphLevelOut: {
+            /** Index */
+            index: number;
+            /** Atoms */
+            atoms: string[];
+            /** Atom Mutex */
+            atom_mutex: [
+                string,
+                string
+            ][];
+            /** Actions */
+            actions: string[];
+            /** Action Mutex */
+            action_mutex: [
+                string,
+                string
+            ][];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -832,6 +992,24 @@ export interface components {
             /** Consistency Violations */
             consistency_violations: components["schemas"]["ConsistencyViolation"][];
             astar: components["schemas"]["SearchRunOut"];
+        };
+        /** HtnOut */
+        HtnOut: {
+            /** Tick */
+            tick: number;
+            /** People */
+            people: string[];
+            /** Found */
+            found: boolean;
+            /** Reason */
+            reason: string;
+            /** Cost */
+            cost: number;
+            /** Steps */
+            steps: string[];
+            /** Optimal Cost */
+            optimal_cost: number | null;
+            tree: components["schemas"]["TaskNodeOut"];
         };
         /** InferIn */
         InferIn: {
@@ -1112,6 +1290,18 @@ export interface components {
              */
             status: "WAITING" | "CARRIED" | "EVACUATED" | "TRAPPED";
         };
+        /** PersonOutcome */
+        PersonOutcome: {
+            /** Id */
+            id: string;
+            /** Status */
+            status: string;
+            /** Pos */
+            pos: [
+                number,
+                number
+            ];
+        };
         /** PlanChangeOut */
         PlanChangeOut: {
             /**
@@ -1157,6 +1347,23 @@ export interface components {
             rows: components["schemas"]["PlannerRow"][];
             /** Equal Cost */
             equal_cost: boolean;
+        };
+        /** PlanGraphOut */
+        PlanGraphOut: {
+            /** Tick */
+            tick: number;
+            /** People */
+            people: string[];
+            /** Goal */
+            goal: string[];
+            /** Goal Level */
+            goal_level: number | null;
+            /** Leveled Off */
+            leveled_off: boolean;
+            /** Plan Steps */
+            plan_steps: number | null;
+            /** Levels */
+            levels: components["schemas"]["GraphLevelOut"][];
         };
         /** PlanStepOut */
         PlanStepOut: {
@@ -1278,6 +1485,45 @@ export interface components {
             resolution: components["schemas"]["ResolutionOut"] | null;
             /** Agree */
             agree: boolean;
+        };
+        /** ReplanOut */
+        ReplanOut: {
+            /** Tick */
+            tick: number;
+            /** Kind */
+            kind: string;
+            /** Reason */
+            reason: string;
+        };
+        /**
+         * ReportOut
+         * @description Everything needed to describe a run in a project report, all read from the engine.
+         */
+        ReportOut: {
+            /** Scenario Id */
+            scenario_id: string;
+            scenario: components["schemas"]["ScenarioModel"];
+            /** Seed */
+            seed: number;
+            /** Fire Mode */
+            fire_mode: string;
+            /** Ticks */
+            ticks: number;
+            /** Status */
+            status: string;
+            /** Finished */
+            finished: boolean;
+            /** People */
+            people: components["schemas"]["PersonOutcome"][];
+            metrics: components["schemas"]["MetricsOut"];
+            /** Replans */
+            replans: components["schemas"]["ReplanOut"][];
+            /** User Events */
+            user_events: components["schemas"]["UserEventOut"][];
+            /** Highlights */
+            highlights: components["schemas"]["LogEntryOut"][];
+            /** Replay Identical */
+            replay_identical: boolean;
         };
         /** ResolutionOut */
         ResolutionOut: {
@@ -1564,12 +1810,41 @@ export interface components {
             /** Exits */
             exits: components["schemas"]["ExitOut"][];
         };
+        /** TaskNodeOut */
+        TaskNodeOut: {
+            /** Task */
+            task: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "compound" | "primitive" | "choice";
+            /** Method */
+            method: string;
+            /** Cost */
+            cost: number;
+            /** Note */
+            note: string;
+            /** Children */
+            children: components["schemas"]["TaskNodeOut"][];
+        };
         /** TraceEventOut */
         TraceEventOut: {
             /** Kind */
             kind: string;
             /** Data */
             data: {
+                [key: string]: unknown;
+            };
+        };
+        /** UserEventOut */
+        UserEventOut: {
+            /** Tick */
+            tick: number;
+            /** Type */
+            type: string;
+            /** Args */
+            args: {
                 [key: string]: unknown;
             };
         };
@@ -2113,6 +2388,46 @@ export interface operations {
             };
         };
     };
+    report_simulation_report_get: {
+        parameters: {
+            query: {
+                session_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     rules_kb_rules_get: {
         parameters: {
             query?: never;
@@ -2485,6 +2800,108 @@ export interface operations {
             };
         };
     };
+    plan_graph_plan_graph_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanCompareIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanGraphOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    plan_htn_plan_htn_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanCompareIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HtnOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     profile_agent_profile_get: {
         parameters: {
             query?: {
@@ -2504,6 +2921,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfileOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bench_agents_bench_agents_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BenchIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BenchOut"];
                 };
             };
             /** @description Not Found */

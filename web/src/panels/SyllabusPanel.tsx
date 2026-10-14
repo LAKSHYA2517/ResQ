@@ -8,7 +8,7 @@ interface Row {
   feature: string;
   tab?: Tab;
   focus?: string;
-  status: "built" | "Phase 5" | "out of scope";
+  status: "built" | "document" | "out of scope";
 }
 
 /** Course map (BCSE306L). "Run it" opens the feature; nothing here is a result. */
@@ -24,7 +24,9 @@ const ROWS: Row[] = [
     module: "1 · Introduction",
     topics: "Agent types",
     feature: "Benchmark: simple-reflex vs goal-based vs utility-based agents",
-    status: "Phase 5",
+    tab: "agent",
+    focus: "bench",
+    status: "built",
   },
   {
     module: "2 · Search",
@@ -91,8 +93,10 @@ const ROWS: Row[] = [
   {
     module: "6 · Planning",
     topics: "Planning graphs, hierarchical planning",
-    feature: "Planning-graph viewer and HTN decomposition tree",
-    status: "Phase 5",
+    feature: "Planning-graph viewer with mutex links, and the HTN decomposition tree",
+    tab: "planning",
+    focus: "htn",
+    status: "built",
   },
   {
     module: "7 · Communicating, perceiving",
@@ -103,8 +107,8 @@ const ROWS: Row[] = [
   {
     module: "8 · Contemporary issues",
     topics: "Ethics",
-    feature: "Triage ethics and limits of classical AI (docs/ETHICS.md)",
-    status: "Phase 5",
+    feature: "Triage ethics and the limits of classical AI: see docs/ETHICS.md",
+    status: "document",
   },
 ];
 
@@ -138,7 +142,7 @@ export function SyllabusPanel() {
                     Run it
                   </Btn>
                 ) : (
-                  <Chip tone={r.status === "out of scope" ? "default" : "warn"}>{r.status}</Chip>
+                  <Chip tone={r.status === "out of scope" ? "default" : "accent"}>{r.status}</Chip>
                 )}
               </div>
               <div className="mt-1 text-sm">{r.feature}</div>

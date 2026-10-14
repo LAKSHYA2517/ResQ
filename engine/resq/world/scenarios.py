@@ -437,3 +437,43 @@ def load_scenario(path: Path) -> Scenario:
 def load_all(directory: Path = SCENARIOS_DIR) -> dict[str, Scenario]:
     """Every ``*.json`` in the directory keyed by file stem, sorted by stem."""
     return {p.stem: load_scenario(p) for p in sorted(directory.glob("*.json"))}
+
+
+def random_scenario(seed: int, rows: int = 10, cols: int = 10) -> Scenario:
+    """A seeded random scenario for benchmarks: scattered walls and rubble, three people, two
+    exits, one or two fires that spread slowly. Always valid (not always solvable)."""
+    from random import Random
+
+    for attempt in range(100):
+        rng = Random(f"random-scenario:{seed}:{attempt}")
+        terrain = [
+            "".join(rng.choices(".r#", weights=(78, 10, 12))[0] for _ in range(cols))
+            for _ in range(rows)
+        ]
+        free = [(r, c) for r in range(rows) for c in range(cols) if terrain[r][c] != "#"]
+        if len(free) < 10:
+            continue
+        spots = rng.sample(free, 8)
+        raw = {
+            "name": f"Random {seed}",
+            "grid_size": [rows, cols],
+            "terrain": terrain,
+            "agent": list(spots[0]),
+            "people": [
+                {
+                    "id": f"p{i + 1}",
+                    "pos": list(spots[1 + i]),
+                    "risk": rng.randint(0, 5),
+                    "urgency": rng.randint(0, 5),
+                }
+                for i in range(3)
+            ],
+            "exits": [{"id": f"e{i + 1}", "pos": list(spots[4 + i])} for i in range(2)],
+            "fire": [list(c) for c in spots[6 : 6 + rng.randint(1, 2)]],
+            "seed": seed,
+            "params": {"p_spread": 0.03},
+        }
+        scenario, _ = parse_scenario(raw)
+        if scenario is not None:
+            return scenario
+    raise ScenarioError([Issue(f"could not generate a valid random scenario for seed {seed}")])

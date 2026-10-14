@@ -186,3 +186,27 @@ def test_log_lists_events_and_replan_reasons_from_the_trace(
     assert replan["reason"] == "Travel(c1_1, c7_7): route cell (4, 4) is now on fire"
     assert next(e for e in at3 if e["kind"] == "event")["text"].startswith("NEW_FIRE")
     assert all(e["kind"] != "action" or e["text"].startswith(("PickUp", "DropOff")) for e in log)
+
+
+def test_run_report(client: TestClient, start: Start) -> None:
+    sid = start("dynamic_emergency")["session_id"]
+    for _ in range(4):
+        client.post("/simulation/step", json={"session_id": sid})
+    client.post(
+        "/simulation/event",
+        json={"session_id": sid, "type": "EXIT_BLOCKED", "args": {"exit": "e1"}},
+    )
+    rep = client.get("/simulation/report", params={"session_id": sid}).json()
+    assert rep["scenario_id"] == "dynamic_emergency" and rep["ticks"] == 4 and rep["seed"] == 5
+    assert rep["replay_identical"] is True
+    assert rep["user_events"] == [{"tick": 4, "type": "EXIT_BLOCKED", "args": {"exit": "e1"}}]
+    assert rep["replans"][0] == {
+        "tick": 3,
+        "kind": "invalid",
+        "reason": "Travel(c1_1, c7_7): route cell (4, 4) is now on fire",
+    }
+    assert all(h["kind"] != "spread" for h in rep["highlights"])
+    state = client.get("/simulation/state", params={"session_id": sid}).json()
+    assert {**rep["metrics"], "timings_ms": {}} == {**state["metrics"], "timings_ms": {}}
+    assert rep["people"] == [{"id": "p1", "status": "WAITING", "pos": [7, 7]}]
+    assert client.get("/simulation/report", params={"session_id": "nope"}).status_code == 404

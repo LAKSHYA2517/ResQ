@@ -6,6 +6,8 @@ from pydantic import BaseModel
 from resq.logic.terms import atom
 from resq.planning.domain import build_domain
 from resq.planning.fwd_planner import plan
+from resq.planning.htn import TaskNode, decompose
+from resq.planning.planning_graph import build_planning_graph
 from resq.planning.regression import one_place_one_load, plan_backward
 from resq.planning.strips import Plan
 from resq.search.router import Router
@@ -104,4 +106,115 @@ async def plan_compare(body: PlanCompareIn) -> PlanCompareOut:
         actions=len(domain.problem.actions),
         rows=[_row(name, p) for name, p in plans],
         equal_cost=len(costs) <= 1 and len({p.found for _, p in plans}) == 1,
+    )
+
+
+class GraphLevelOut(BaseModel):
+    index: int
+    atoms: list[str]
+    atom_mutex: list[tuple[str, str]]
+    actions: list[str]  # no-ops appear as "keep <atom>"
+    action_mutex: list[tuple[str, str]]
+
+
+class PlanGraphOut(BaseModel):
+    tick: int
+    people: list[str]
+    goal: list[str]
+    goal_level: int | None  # lower bound on plan length (in parallel steps)
+    leveled_off: bool
+    plan_steps: int | None  # length of the optimal plan, for comparison
+    levels: list[GraphLevelOut]
+
+
+class TaskNodeOut(BaseModel):
+    task: str
+    kind: Literal["compound", "primitive", "choice"]
+    method: str
+    cost: float
+    note: str
+    children: list["TaskNodeOut"]
+
+
+class HtnOut(BaseModel):
+    tick: int
+    people: list[str]
+    found: bool
+    reason: str
+    cost: float
+    steps: list[str]
+    optimal_cost: float | None  # the STRIPS planner's cost for the same goal
+    tree: TaskNodeOut
+
+
+def _problem(body: PlanCompareIn):  # type: ignore[no-untyped-def]
+    session, snap = snapshot_at(body.session_id, body.tick)
+    state = snap.state
+    carrying = state.agent.carrying
+    ranked = [p.person_id for p in snap.priorities]
+    if body.scope == "all":
+        people = (([carrying] if carrying else []) + ranked)[:MAX_PEOPLE]
+    else:
+        people = [snap.target] if snap.target else []
+    if not people:
+        raise HTTPException(409, f"nobody to plan for at tick {snap.tick}")
+    unavailable = {d.fact for d in snap.derived if d.fact.pred == "Unavailable"}
+    open_exits = [e for e in state.exits if atom("Unavailable", e.id) not in unavailable]
+    router_ = Router(state, session.sim.scenario.params.cost_model)
+    return snap, state, router_, people, open_exits
+
+
+@router.post("/graph", responses={409: {"model": ErrorOut}})
+async def plan_graph(body: PlanCompareIn) -> PlanGraphOut:
+    """Planning graph for the current goal: proposition and action levels with mutex links."""
+    snap, state, router_, people, open_exits = _problem(body)
+    domain = build_domain(state, router_, people, open_exits)
+    graph, _ = build_planning_graph(domain.problem)
+    best = plan(domain.problem, domain.heuristic)[0]
+    return PlanGraphOut(
+        tick=snap.tick,
+        people=people,
+        goal=list(graph.goal),
+        goal_level=graph.goal_level,
+        leveled_off=graph.leveled_off,
+        plan_steps=len(best.steps) if best.found else None,
+        levels=[
+            GraphLevelOut(
+                index=lv.index,
+                atoms=list(lv.atoms),
+                atom_mutex=list(lv.atom_mutex),
+                actions=list(lv.actions),
+                action_mutex=list(lv.action_mutex),
+            )
+            for lv in graph.levels
+        ],
+    )
+
+
+def _task(node: TaskNode) -> TaskNodeOut:
+    return TaskNodeOut(
+        task=node.task,
+        kind=node.kind,  # type: ignore[arg-type]
+        method=node.method,
+        cost=node.cost,
+        note=node.note,
+        children=[_task(c) for c in node.children],
+    )
+
+
+@router.post("/htn", responses={409: {"model": ErrorOut}})
+async def plan_htn(body: PlanCompareIn) -> HtnOut:
+    """HTN decomposition of the current goal into primitive actions, as a tree."""
+    snap, state, router_, people, open_exits = _problem(body)
+    htn, _ = decompose(state, router_, people, open_exits)
+    domain = build_domain(state, router_, people, open_exits)
+    return HtnOut(
+        tick=snap.tick,
+        people=people,
+        found=htn.found,
+        reason=htn.reason,
+        cost=htn.cost,
+        steps=list(htn.steps),
+        optimal_cost=plan(domain.problem, domain.heuristic)[0].cost,
+        tree=_task(htn.tree),
     )

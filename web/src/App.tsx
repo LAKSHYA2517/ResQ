@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { api, type Cell } from "./api/client";
 import { Builder } from "./components/Builder";
+import { CommandPalette } from "./components/CommandPalette";
 import { Controls, EventLog } from "./components/Controls";
 import { DemoBar } from "./components/DemoBar";
 import { ExplainDialog } from "./components/ExplainDialog";
@@ -13,6 +14,7 @@ import { goToStep } from "./demo";
 import { cellName, key } from "./lib/cells";
 import { draftToState } from "./lib/draft";
 import type { Scene } from "./lib/draw";
+import { saveReport } from "./lib/report";
 import { AgentPanel } from "./panels/AgentPanel";
 import { OptimizePanel } from "./panels/OptimizePanel";
 import { PlanningPanel } from "./panels/PlanningPanel";
@@ -43,6 +45,8 @@ export function App() {
   const tab = useUi((s) => s.tab);
   const setTab = useUi((s) => s.setTab);
   const demoStep = useUi((s) => s.demoStep);
+  const presentation = useUi((s) => s.presentation);
+  const setPresentation = useUi((s) => s.setPresentation);
   const sim = useSim();
   const view = useView();
   const builder = useBuilder();
@@ -58,11 +62,27 @@ export function App() {
       .catch(() => undefined);
   }, [load]);
 
-  // Keyboard: space = play/pause, → = step, ← = scrub back.
+  // Presentation mode scales every rem-based size (Tailwind) by raising the root font size.
+  useEffect(() => {
+    document.documentElement.style.fontSize = presentation ? "18px" : "";
+  }, [presentation]);
+
+  // Keyboard: Ctrl/Cmd+K = command palette, space = play/pause, → = step, ← = scrub back,
+  // p = presentation mode.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement | null)?.tagName;
-      if (tag && ["INPUT", "SELECT", "TEXTAREA", "BUTTON"].includes(tag)) return;
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        useUi.getState().setPalette(!useUi.getState().palette);
+        return;
+      }
+      const tag = (e.target as HTMLElement | null)?.tagName ?? "";
+      if (["INPUT", "SELECT", "TEXTAREA"].includes(tag)) return; // typing, not a shortcut
+      if (e.key === "p" && !e.metaKey && !e.ctrlKey) {
+        useUi.getState().setPresentation(!useUi.getState().presentation);
+        return;
+      }
+      if (tag === "BUTTON") return; // space and arrows belong to the focused button
       const s = useSim.getState();
       if (!s.head || useUi.getState().mode !== "run") return;
       if (e.code === "Space") {
@@ -162,7 +182,7 @@ export function App() {
         <h1 className="text-lg font-bold tracking-tight">
           ResQ<span className="text-accent">-AI</span>
         </h1>
-        <span className="hidden text-xs text-dim lg:inline">
+        <span className={`hidden text-xs text-dim ${presentation ? "" : "xl:inline"}`}>
           classical-AI rescue agent · every number comes from the engine
         </span>
         <div className="ml-auto flex items-center gap-2">
@@ -188,10 +208,34 @@ export function App() {
               </button>
             ))}
           </div>
+          {sim.sessionId && (
+            <Btn
+              title="Download the engine's report for this run (JSON and a printable page)"
+              onClick={async () => {
+                try {
+                  saveReport(await api.report(sim.sessionId ?? ""));
+                } catch (e) {
+                  useSim.setState({ error: (e as Error).message });
+                }
+              }}
+            >
+              ⤓ Report
+            </Btn>
+          )}
+          <Btn
+            aria-pressed={presentation}
+            title="Presentation mode (p): larger text, builder hidden"
+            onClick={() => setPresentation(!presentation)}
+          >
+            {presentation ? "◱ Exit present" : "◲ Present"}
+          </Btn>
+          <Btn title="Command palette" onClick={() => useUi.getState().setPalette(true)}>
+            ⌘K
+          </Btn>
           <Btn
             tone={demoStep === null ? "default" : "primary"}
             disabled={apiDown || sim.busy}
-            onClick={() => void goToStep(demoStep === null ? 0 : 0, true)}
+            onClick={() => void goToStep(0, true)}
           >
             ▶ Guided demo
           </Btn>
@@ -209,10 +253,18 @@ export function App() {
         </div>
       )}
 
-      <div className="grid min-h-0 flex-1 grid-cols-[280px_minmax(0,1fr)_430px]">
-        <aside className="min-h-0 border-r border-line bg-panel" aria-label="Scenario">
-          {running ? <RunSidebar /> : <Builder />}
-        </aside>
+      <div
+        className={`grid min-h-0 flex-1 ${
+          presentation && running
+            ? "grid-cols-[minmax(0,1fr)_minmax(420px,40%)]"
+            : "grid-cols-[280px_minmax(0,1fr)_430px]"
+        }`}
+      >
+        {!(presentation && running) && (
+          <aside className="min-h-0 border-r border-line bg-panel" aria-label="Scenario">
+            {running ? <RunSidebar /> : <Builder />}
+          </aside>
+        )}
 
         <main className="relative flex min-h-0 min-w-0 flex-col bg-bg p-2">
           <div className="relative min-h-0 flex-1">
@@ -309,6 +361,7 @@ export function App() {
         </div>
       </footer>
       <ExplainDialog />
+      <CommandPalette />
     </div>
   );
 }

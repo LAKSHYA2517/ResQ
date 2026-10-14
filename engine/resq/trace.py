@@ -222,3 +222,21 @@ class GameSearched(TraceEvent):
     value: float | None  # None = the agent is cut off (infinite cost)
     nodes: int
     cutoffs: int
+
+
+# --- planning graph, HTN ------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class GraphLevelBuilt(TraceEvent):
+    level: int
+    atoms: int
+    atom_mutexes: int
+    actions: int
+
+
+@dataclass(frozen=True)
+class TaskDecomposed(TraceEvent):
+    task: str
+    method: str
+    subtasks: tuple[str, ...]

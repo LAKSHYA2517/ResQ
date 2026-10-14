@@ -115,7 +115,7 @@ export const STEPS: DemoStep[] = [
   {
     title: "Plan",
     caption:
-      "A STRIPS plan: Travel, PickUp, Travel, DropOff, each Travel costed by A*. Forward search (from the state) and regression (from the goal) are run on the same problem and must find the same cost. The HTN tree arrives in Phase 5.",
+      "A STRIPS plan: Travel, PickUp, Travel, DropOff, each Travel costed by A*. Forward search (from the state) and regression (from the goal) are run on the same problem and must find the same cost. Below it: the HTN decomposition tree and the planning graph with its mutex links.",
     panel: "planning",
     run: async () => {
       ui().setOverlay(null);
@@ -163,13 +163,20 @@ export const STEPS: DemoStep[] = [
   {
     title: "Final outcome",
     caption:
-      "The run finishes and the measured totals appear in the sidebar. Replaying the scenario, seed and event log reproduces every tick (scrub the timeline). The agent-type benchmark arrives in Phase 5.",
+      "The run finishes and the measured totals appear in the sidebar. Replaying the scenario, seed and event log reproduces every tick (scrub the timeline).",
     panel: "planning",
     run: async () => {
       sim().setRunning(true);
       await until(() => sim().head?.finished ?? true, 120000);
       sim().setRunning(false);
     },
+  },
+  {
+    title: "Agent-type benchmark",
+    caption:
+      "Is all this machinery worth it? A simple-reflex agent, a goal-based agent and the full utility-based agent run on the same seeded scenarios. The bars are measured, and the ranking line says whether the expected order actually holds.",
+    panel: "agent",
+    run: async () => ui().setFocus("bench"),
   },
   {
     title: "Impossible scenario",

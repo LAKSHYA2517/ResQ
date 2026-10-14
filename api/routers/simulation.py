@@ -1,4 +1,7 @@
+from typing import Any
+
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
 
 from resq.agent.loop import Snapshot, replay
 from resq.trace import (
@@ -19,7 +22,9 @@ from ..schemas import (
     EventOut,
     FactDiff,
     LogEntryOut,
+    MetricsOut,
     RunOut,
+    ScenarioModel,
     SessionIn,
     SessionOut,
     SnapshotOut,
@@ -146,3 +151,69 @@ def log_entries(history: list[Snapshot]) -> list[LogEntryOut]:
 @router.get("/log")
 async def log(session_id: str) -> list[LogEntryOut]:
     return log_entries(store.session(session_id).sim.history)
+
+
+class PersonOutcome(BaseModel):
+    id: str
+    status: str
+    pos: tuple[int, int]
+
+
+class ReplanOut(BaseModel):
+    tick: int
+    kind: str
+    reason: str
+
+
+class UserEventOut(BaseModel):
+    tick: int
+    type: str
+    args: dict[str, Any]
+
+
+class ReportOut(BaseModel):
+    """Everything needed to describe a run in a project report, all read from the engine."""
+
+    scenario_id: str
+    scenario: ScenarioModel
+    seed: int
+    fire_mode: str
+    ticks: int
+    status: str
+    finished: bool
+    people: list[PersonOutcome]
+    metrics: MetricsOut
+    replans: list[ReplanOut]
+    user_events: list[UserEventOut]
+    highlights: list[LogEntryOut]  # the event log without fire-spread lines
+    replay_identical: bool  # rebuilding every tick from scenario + seed + log gave the same run
+
+
+@router.get("/report")
+async def report(session_id: str) -> ReportOut:
+    session = store.session(session_id)
+    sim = session.sim
+    head = sim.head
+    rebuilt = replay(sim.scenario, tuple(sim.log), head.tick)
+    snap = snapshot_out(head)
+    return ReportOut(
+        scenario_id=session.scenario_id,
+        scenario=ScenarioModel.model_validate(sim.scenario.to_dict()),
+        seed=sim.scenario.seed,
+        fire_mode=sim.scenario.params.fire_mode,
+        ticks=head.tick,
+        status=head.status.value,
+        finished=head.finished,
+        people=[
+            PersonOutcome(id=p.id, status=p.status.value, pos=p.pos) for p in head.state.people
+        ],
+        metrics=snap.metrics,
+        replans=[
+            ReplanOut(tick=s.tick, kind=s.plan_change.kind, reason=s.plan_change.reason)
+            for s in sim.history
+            if s.plan_change is not None and s.plan_change.is_replan
+        ],
+        user_events=[UserEventOut(tick=e.tick, type=e.type.value, args=e.args) for e in sim.log],
+        highlights=[e for e in log_entries(sim.history) if e.kind != "spread"],
+        replay_identical=rebuilt == sim.history,
+    )

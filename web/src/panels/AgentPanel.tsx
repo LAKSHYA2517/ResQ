@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { Empty, Section } from "../components/ui";
 import { useSim } from "../store/sim";
+import { Benchmark } from "./Benchmark";
 
 export function AgentPanel() {
   const sessionId = useSim((s) => s.sessionId);
@@ -48,6 +49,7 @@ export function AgentPanel() {
           to worst-case fire and these rows change.
         </p>
       </Section>
+      <Benchmark />
     </div>
   );
 }

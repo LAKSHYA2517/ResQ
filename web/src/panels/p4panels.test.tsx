@@ -114,10 +114,10 @@ describe("SyllabusPanel", () => {
   it("jumps to the feature and asks it to run", async () => {
     renderWithQuery(<SyllabusPanel />);
     const buttons = screen.getAllByRole("button", { name: "Run it" });
-    expect(buttons).toHaveLength(9);
-    expect(screen.getAllByText("Phase 5").length).toBe(3);
+    expect(buttons).toHaveLength(11);
+    expect(screen.getByText("document")).toBeTruthy();
     expect(screen.getByText("out of scope")).toBeTruthy();
-    fireEvent.click(buttons[1] as HTMLElement); // Module 2: search
+    fireEvent.click(buttons[2] as HTMLElement); // Module 2: search
     await waitFor(() => expect(useUi.getState().tab).toBe("search"));
     expect(useUi.getState().focus).toBe("race");
   });

@@ -106,16 +106,43 @@ P4 decisions worth remembering:
 - `scripts/make_fixtures.py` regenerates the frontend test fixtures from the engine.
 
 ## P5 — SHOULD
-- [ ] Planning graph with mutex links + viewer
-- [ ] HTN decomposition tree
-- [ ] Baseline agents (reflex / goal / utility), `make bench` real seeded tables (`/bench/agents`)
-- [ ] `docs/ETHICS.md`
+- [x] Planning graph with mutex links (`planning/planning_graph.py`, `/plan/graph`) and a level-by-level viewer
+- [x] HTN decomposition tree (`planning/htn.py`, `/plan/htn`)
+- [x] Baseline agents: simple reflex, goal-based, utility-based (`agent/baselines.py`); `make bench` writes seeded tables to `docs/BENCHMARK.md`; `/bench/agents` and a benchmark section in the Agent tab
+- [x] `docs/ETHICS.md`
+- [x] Acceptance: on the 10 predefined + 20 random scenarios, people rescued are utility 90.2% ≥ goal-based 87.8% ≥ reflex 53.7% (measured; asserted in `tests/engine/test_p5.py`)
+
+P5 decisions worth remembering:
+- **Benchmark honesty:** the ranking is by people rescued. The utility agent pays *more* path per rescue than the goal-based one (19.2 vs 17.4) because it goes for the person most at risk, not the nearest. In Spreading Fire the reflex agent actually rescues more (2/2 vs 1/2). Both facts are in `docs/BENCHMARK.md`; neither is hidden.
+- The reflex agent sees only its cell, its four neighbours and a compass to the nearest person/exit, and gives up when every closer cell is blocked. The goal-based agent has the map and re-runs A* every tick. All three share the same fire (same seed), events and costs.
+- "Replans" means dropped/replaced plans for the utility agent and changes of destination mid-walk for the baselines; the columns are not directly comparable and the doc says so.
+- Planning graph is classic Graphplan expansion (positive atoms, no-ops, three action-mutex kinds, inconsistent-support atom mutex). `goal_level` is a lower bound on plan length and is property-tested against the optimal planner.
+- HTN has fixed methods and no search over orderings, so its cost can exceed the optimal planner's for several people; the UI shows both numbers.
+- `random_scenario(seed)` (in `world/scenarios.py`) generates the benchmark's random worlds.
 
 ## P6 — Polish and docs
-- [ ] Presentation mode, command palette, run-report export
-- [ ] Playwright trace-integrity e2e + full Guided Demo
-- [ ] `README.md`, `ARCHITECTURE.md`, `SYLLABUS_MAP.md`, `VIVA_QA.md` (≥25 Q&A), `DEMO_SCRIPT.md`
-- [ ] Brief §13 checklist complete; grep confirms no hardcoded demo results
+- [x] Presentation mode (`p` or ◲ Present: 18 px root font, builder dock hidden), command palette (Ctrl/Cmd+K, cmdk), run-report export (`GET /simulation/report` → JSON + printable HTML)
+- [x] Trace-integrity browser test: steps through the whole Showcase run (with a fire injected) and compares the screen with the engine's response at every tick, then checks the run rebuilds identically from scenario + seed + log
+- [x] `make check` now includes the browser tests (12)
+- [x] Docs: `README.md` (screenshots in `docs/img/`, quickstart in two commands), `ARCHITECTURE.md`, `SYLLABUS_MAP.md`, `VIVA_QA.md` (32 Q&A), `DEMO_SCRIPT.md`; `ETHICS.md` and `BENCHMARK.md` from P5
+- [x] Source audit for hardcoded results: none (only a bar-width percentage and a docstring example matched)
+- [x] Performance: A* on 30×30 under 100 ms (tested); autoplay on 20×20 measured at 60.3 fps, worst frame 16.8 ms (headless Chromium, software rendering)
+
+Brief §13 checklist:
+- [x] Every MUST item in §3 reachable from the UI and covered by tests
+- [x] `make check` green; `make dev` brings up the app with one command
+- [x] Trace-integrity e2e passes
+- [x] Guided Demo runs start to finish without manual fixes (browser test; the race modal needs a Close click)
+- [x] `make bench` produces real, reproducible (seeded) tables
+- [x] Docs: README, ARCHITECTURE, SYLLABUS_MAP, VIVA_QA (≥ 25), ETHICS, DEMO_SCRIPT
+- [x] No hardcoded demo results (audited)
+- [x] Limitations stated plainly (README, ETHICS)
+- [ ] Rehearsal on a real classroom projector: not possible from here; only headless 1366×768 screenshots were checked
+
+P6 notes:
+- The command palette uses plain "contains every typed word" matching: cmdk's fuzzy ranking put "Export run report" above "Triage Dilemma" when typing "triage".
+- Letter shortcuts (`p`) work while a button has focus; space and arrows do not (they belong to the button).
+- Not done from the brief's stack list: shadcn/ui and React Flow were never installed (hand-written Radix components; nested lists and inline SVG for trees and the network).
 
 ## P7 — COULD (only after P6)
 - [ ] Fog-of-war + belief states, D* Lite comparison

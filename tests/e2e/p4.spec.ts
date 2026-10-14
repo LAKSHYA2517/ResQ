@@ -130,9 +130,9 @@ test("Modules 6 and 1: planners agree, PEAS, and the syllabus Run it links", asy
   await expect(page.getByText("Stochastic", { exact: true })).toBeVisible();
 
   await page.getByRole("tab", { name: "Syllabus" }).click();
-  await expect(page.getByRole("button", { name: "Run it" })).toHaveCount(9);
+  await expect(page.getByRole("button", { name: "Run it" })).toHaveCount(11);
   const proved = page.waitForResponse((r) => r.url().includes("/kb/query"));
-  await page.getByRole("button", { name: "Run it" }).nth(5).click(); // backward chaining row
+  await page.getByRole("button", { name: "Run it" }).nth(6).click(); // backward chaining row
   await proved;
   await expect(page.getByRole("tab", { name: "Logic" })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByText("all methods agree")).toBeVisible();
@@ -148,8 +148,8 @@ test("the guided demo runs start to finish with no errors", async ({ page }) => 
   await page.getByRole("button", { name: "Guided demo" }).click();
   const bar = page.locator('section[aria-label="Guided demo"]');
   const titles: string[] = [];
-  for (let i = 0; i < 16; i++) {
-    await expect(bar.getByText(`step ${i + 1} of 16`)).toBeVisible({ timeout: 120_000 });
+  for (let i = 0; i < 17; i++) {
+    await expect(bar.getByText(`step ${i + 1} of 17`)).toBeVisible({ timeout: 120_000 });
     await expect(bar.getByRole("button", { name: "Working…" })).toHaveCount(0, { timeout: 120_000 });
     titles.push(await bar.locator(".font-semibold").first().innerText());
     await expect(bar).not.toContainText("Not built yet");
@@ -158,10 +158,45 @@ test("the guided demo runs start to finish with no errors", async ({ page }) => 
       await expect(page.getByRole("dialog")).toContainText("Algorithm race");
       await page.getByRole("button", { name: "Close" }).click();
     }
-    if (i < 15) await bar.getByRole("button", { name: "Next →" }).click();
+    if (i < 16) await bar.getByRole("button", { name: "Next →" }).click();
   }
   expect(titles[0]).toBe("Load Showcase");
-  expect(titles[15]).toBe("Impossible scenario");
+  expect(titles[15]).toBe("Agent-type benchmark");
+  expect(titles[16]).toBe("Impossible scenario");
   await expect(page.getByText("No valid plan right now")).toBeVisible();
   expect(errors).toEqual([]);
+});
+
+test("P5: planning graph, HTN tree and the agent benchmark", async ({ page }) => {
+  await start(page);
+  await page.getByRole("tab", { name: "Plan" }).click();
+  const htn = await json(page, "/plan/htn", () =>
+    page.getByRole("button", { name: "Decompose" }).click(),
+  );
+  expect(htn.found).toBe(true);
+  expect(htn.cost).toBe(htn.optimal_cost);
+  await expect(page.getByText("Evacuate(p2)", { exact: true })).toBeVisible();
+  await expect(page.getByText("✓ matches the optimum")).toBeVisible();
+
+  const graph = await json(page, "/plan/graph", () =>
+    page.getByRole("button", { name: "Build graph" }).click(),
+  );
+  expect(graph.goal_level).toBeLessThanOrEqual(graph.plan_steps);
+  await expect(page.getByText(`goal first possible at level ${graph.goal_level}`)).toBeVisible();
+  await page.getByRole("button", { name: /^S1/ }).click();
+  await expect(page.getByText(/atom mutex:/)).toBeVisible();
+
+  await page.getByRole("tab", { name: "Agent" }).click();
+  const bench = await json(page, "/bench/agents", () =>
+    page.getByRole("button", { name: "Run benchmark" }).click(),
+  );
+  expect(bench.summaries).toHaveLength(3);
+  for (const s of bench.summaries) {
+    await expect(
+      page.getByText(`${s.rescued}/${s.people} rescued (${s.rescued_pct.toFixed(1)}%)`),
+    ).toBeVisible();
+  }
+  await expect(
+    page.getByText(bench.expected_order_holds ? /✓ utility ≥ goal-based ≥ reflex/ : /does not hold/),
+  ).toBeVisible();
 });

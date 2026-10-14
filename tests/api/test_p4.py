@@ -216,3 +216,39 @@ def test_agent_profile_follows_the_scenario(client: TestClient, start: Start) ->
     expected = environment(load_all()["showcase"])
     assert [p["why"] for p in spreading["environment"]] == [p.why for p in expected]
     assert client.get("/agent/profile", params={"scenario_id": "nope"}).status_code == 404
+
+
+# --- P5 -------------------------------------------------------------------------------------------
+
+
+def test_plan_graph_and_htn(client: TestClient, start: Start) -> None:
+    sid = start("showcase")["session_id"]
+    graph = client.post("/plan/graph", json={"session_id": sid}).json()
+    assert graph["people"] == ["p2"] and graph["goal"] == ["Evacuated(p2)"]
+    assert graph["goal_level"] == 4 == graph["plan_steps"] and graph["leveled_off"]
+    assert "keep HandsFree" in graph["levels"][0]["actions"]
+    assert ["At(c4_4)", "At(c7_8)"] in graph["levels"][1]["atom_mutex"]
+    assert graph["levels"][-1]["actions"] == []
+    htn = client.post("/plan/htn", json={"session_id": sid}).json()
+    assert htn["found"] and htn["cost"] == htn["optimal_cost"] == 18
+    kids = [c["task"] for c in htn["tree"]["children"][0]["children"]]
+    assert kids == ["Goto(p2)", "PickUp(p2)", "ChooseExit(p2)", "Goto(e2)", "DropOff(p2, e2)"]
+    everyone = client.post("/plan/htn", json={"session_id": sid, "scope": "all"}).json()
+    assert everyone["people"] == ["p2", "p3", "p1"] and len(everyone["steps"]) == 12
+    assert everyone["cost"] >= everyone["optimal_cost"]
+    stuck = start("impossible")["session_id"]
+    assert client.post("/plan/graph", json={"session_id": stuck}).status_code == 409
+    assert client.post("/plan/htn", json={"session_id": stuck}).status_code == 409
+
+
+def test_bench_agents(client: TestClient) -> None:
+    body = {"scenario_ids": ["basic_rescue", "dynamic_emergency", "triage_dilemma"], "random": 2}
+    out = client.post("/bench/agents", json=body).json()
+    assert [s["agent"] for s in out["summaries"]] == ["reflex", "goal", "utility"]
+    assert len(out["rows"]) == 15 and all(s["scenarios"] == 5 for s in out["summaries"])
+    pct = {s["agent"]: s["rescued_pct"] for s in out["summaries"]}
+    assert out["expected_order_holds"] == (pct["utility"] >= pct["goal"] >= pct["reflex"])
+    wall = [r for r in out["rows"] if r["scenario"] == "Dynamic Emergency"]
+    assert [r["rescued"] for r in wall] == [0, 1, 1]
+    assert client.post("/bench/agents", json=body).json() == out  # seeded
+    assert client.post("/bench/agents", json={"scenario_ids": ["nope"]}).status_code == 404

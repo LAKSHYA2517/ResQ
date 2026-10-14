@@ -24,9 +24,10 @@ e2e:
 	pnpm --dir web exec playwright install chromium
 	NODE_PATH=$(CURDIR)/web/node_modules pnpm --dir web exec playwright test
 
-# Single local gate: types sync, lint, python types, tests, frontend build.
+# Single local gate: types sync, lint, python types, unit tests, frontend build, browser tests.
 check: types lint test
 	pnpm --dir web build
+	$(MAKE) e2e
 
 # API on :8000 and web on :5173 together; Ctrl-C stops both.
 dev:
@@ -35,8 +36,9 @@ dev:
 	pnpm --dir web dev & \
 	wait
 
+# Agent-type benchmark, seeded (also writes docs/BENCHMARK.md). Extra flags: make bench ARGS="--random 50"
 bench:
-	@echo "bench: not implemented until Phase 5"; exit 1
+	uv run python scripts/bench.py --out docs/BENCHMARK.md $(ARGS)
 
 # Headless run of the full workflow (offline). Extra flags: make demo ARGS="--scenario triage_dilemma"
 demo:

@@ -27,6 +27,11 @@ export type OrderReport = S["OrderOut"];
 export type Adversarial = S["AdversarialOut"];
 export type PlanCompare = S["PlanCompareOut"];
 export type Profile = S["ProfileOut"];
+export type PlanGraph = S["PlanGraphOut"];
+export type Htn = S["HtnOut"];
+export type TaskNode = S["TaskNodeOut"];
+export type Bench = S["BenchOut"];
+export type Report = S["ReportOut"];
 export type Belief = S["BeliefOut"];
 export type FireMode = S["SessionOut"]["fire_mode"];
 
@@ -107,5 +112,9 @@ export const api = {
   order: (body: In<"OrderIn">) => post<OrderReport>("/optimize/order", body),
   adversarial: (body: In<"AdversarialIn">) => post<Adversarial>("/adversarial/move", body),
   planCompare: (body: In<"PlanCompareIn">) => post<PlanCompare>("/plan/compare", body),
+  planGraph: (body: In<"PlanCompareIn">) => post<PlanGraph>("/plan/graph", body),
+  htn: (body: In<"PlanCompareIn">) => post<Htn>("/plan/htn", body),
+  report: (session_id: string) => request<Report>(`/simulation/report${qs({ session_id })}`),
+  bench: (body: Partial<S["BenchIn"]>) => post<Bench>("/bench/agents", body),
   profile: (session_id: string) => request<Profile>(`/agent/profile${qs({ session_id })}`),
 };
