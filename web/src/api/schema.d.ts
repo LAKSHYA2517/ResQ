@@ -264,6 +264,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/kb/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Query
+         * @description "Prove it": answer one goal three independent ways from the same base facts: forward
+         *     chaining (is it in the fixpoint?), backward chaining (proof tree) and, for ground goals,
+         *     resolution refutation (each resolvent down to the empty clause).
+         */
+        post: operations["query_kb_query_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/search/compare": {
         parameters: {
             query?: never;
@@ -284,10 +306,211 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/search/heuristic-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Heuristic Check
+         * @description Check h(n) <= h*(n) and h(n) <= c(n, n') + h(n') over every passable cell, exhaustively.
+         */
+        post: operations["heuristic_check_search_heuristic_check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bayes/network": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Network
+         * @description The default per-zone sensor network: Fire -> Smoke, Heat, Trapped; Trapped -> Voice.
+         */
+        get: operations["network_bayes_network_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bayes/infer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Infer
+         * @description Exact posterior two ways, and sampling estimates with their convergence towards it.
+         */
+        post: operations["infer_bayes_infer_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/optimize/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Optimize Order
+         * @description Rescue-order optimisation: minimise the sum of weight x completion time, with hill
+         *     climbing, simulated annealing and a genetic algorithm against greedy and the true optimum.
+         */
+        post: operations["optimize_order_optimize_order_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/adversarial/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Adversarial Move
+         * @description The agent's best next step if the fire played its worst case, found by minimax and by
+         *     alpha-beta on the same game: same move and value, fewer nodes with pruning.
+         */
+        post: operations["adversarial_move_adversarial_move_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plan/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Plan Compare
+         * @description Forward (progression) vs backward (regression) planning on the same STRIPS problem.
+         */
+        post: operations["plan_compare_plan_compare_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agent/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Profile
+         * @description PEAS and the environment's properties for a scenario (or for a running session, whose
+         *     fire mode may differ from the scenario file).
+         */
+        get: operations["profile_agent_profile_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AdmissibilityViolation */
+        AdmissibilityViolation: {
+            /** Cell */
+            cell: [
+                number,
+                number
+            ];
+            /** H */
+            h: number;
+            /** True Cost */
+            true_cost: number;
+        };
+        /** AdversarialIn */
+        AdversarialIn: {
+            /** Session Id */
+            session_id: string;
+            /** Tick */
+            tick?: number | null;
+            /**
+             * Depth
+             * @default 4
+             */
+            depth: number;
+            /**
+             * K
+             * @default 1
+             */
+            k: number;
+        };
+        /** AdversarialOut */
+        AdversarialOut: {
+            /** Tick */
+            tick: number;
+            /** Source */
+            source: [
+                number,
+                number
+            ];
+            /** Goal */
+            goal: [
+                number,
+                number
+            ];
+            /** Depth */
+            depth: number;
+            /** K */
+            k: number;
+            minimax: components["schemas"]["GameResult"];
+            alphabeta: components["schemas"]["GameResult"];
+            /** Same Move */
+            same_move: boolean;
+            /** Same Value */
+            same_value: boolean;
+            /** Nodes Saved */
+            nodes_saved: number;
+            /** Calm Cost */
+            calm_cost: number | null;
+        };
         /** AgentOut */
         AgentOut: {
             /** Pos */
@@ -297,6 +520,26 @@ export interface components {
             ];
             /** Carrying */
             carrying: string | null;
+        };
+        /**
+         * BeliefOut
+         * @description One person's zone: sensor readings and the exact posterior behind Risk(P).
+         */
+        BeliefOut: {
+            /** Person Id */
+            person_id: string;
+            /** Prior Fire */
+            prior_fire: number;
+            /** Evidence */
+            evidence: {
+                [key: string]: boolean;
+            };
+            /** P Fire */
+            p_fire: number;
+            /** P Trapped */
+            p_trapped: number;
+            /** Risk */
+            risk: number;
         };
         /** CompareIn */
         CompareIn: {
@@ -322,6 +565,16 @@ export interface components {
              *     ]
              */
             runs: components["schemas"]["RunSpec"][];
+            /**
+             * Limit
+             * @default 20
+             */
+            limit: number;
+            /**
+             * W
+             * @default 2
+             */
+            w: number;
         };
         /** CompareOut */
         CompareOut: {
@@ -342,6 +595,25 @@ export interface components {
             /** Runs */
             runs: components["schemas"]["SearchRunOut"][];
         };
+        /** ConsistencyViolation */
+        ConsistencyViolation: {
+            /** Cell */
+            cell: [
+                number,
+                number
+            ];
+            /** Next Cell */
+            next_cell: [
+                number,
+                number
+            ];
+            /** H */
+            h: number;
+            /** Step Cost */
+            step_cost: number;
+            /** H Next */
+            h_next: number;
+        };
         /** CostModelModel */
         CostModelModel: {
             /** Floor */
@@ -356,6 +628,22 @@ export interface components {
             pickup: number;
             /** Dropoff */
             dropoff: number;
+        };
+        /** CptRow */
+        CptRow: {
+            /** Given */
+            given: boolean[];
+            /** P True */
+            p_true: number;
+        };
+        /** CurvePoint */
+        CurvePoint: {
+            /** N */
+            n: number;
+            /** Estimate */
+            estimate: number;
+            /** Error */
+            error: number;
         };
         /** DerivationOut */
         DerivationOut: {
@@ -401,6 +689,17 @@ export interface components {
             /** Replan Reason */
             replan_reason: string | null;
         };
+        /** ExactOut */
+        ExactOut: {
+            /** Method */
+            method: string;
+            /** P True */
+            p_true: number;
+            /** Work */
+            work: number;
+            /** Time Ms */
+            time_ms: number;
+        };
         /** ExitModel */
         ExitModel: {
             /** Id */
@@ -437,6 +736,44 @@ export interface components {
             /** Removed */
             removed: string[];
         };
+        /** ForwardOut */
+        ForwardOut: {
+            /** Holds */
+            holds: boolean;
+            /** Answers */
+            answers: {
+                [key: string]: string;
+            }[];
+            /** Derivations */
+            derivations: components["schemas"]["DerivationOut"][];
+            /** Passes */
+            passes: number;
+        };
+        /** GameResult */
+        GameResult: {
+            /** Algorithm */
+            algorithm: string;
+            /** Move */
+            move: [
+                number,
+                number
+            ] | null;
+            /** Value */
+            value: number | null;
+            /** Cut Off */
+            cut_off: boolean;
+            /** Nodes */
+            nodes: number;
+            /** Cutoffs */
+            cutoffs: number;
+            /** Time Ms */
+            time_ms: number;
+            /** Line */
+            line: [
+                number,
+                number
+            ][][];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -448,6 +785,111 @@ export interface components {
             status: string;
             /** Version */
             version: string;
+        };
+        /** HeuristicIn */
+        HeuristicIn: {
+            /** Session Id */
+            session_id: string;
+            /** Tick */
+            tick?: number | null;
+            /** Target */
+            target?: string | null;
+            /**
+             * Heuristic
+             * @default manhattan
+             * @enum {string}
+             */
+            heuristic: "manhattan" | "euclidean" | "zero" | "weighted";
+            /**
+             * W
+             * @default 2
+             */
+            w: number;
+        };
+        /** HeuristicOut */
+        HeuristicOut: {
+            /** Heuristic */
+            heuristic: string;
+            /** W */
+            w: number;
+            /** Target Id */
+            target_id: string;
+            /** Goal */
+            goal: [
+                number,
+                number
+            ];
+            /** Admissible */
+            admissible: boolean;
+            /** Consistent */
+            consistent: boolean;
+            /** N Admissibility Violations */
+            n_admissibility_violations: number;
+            /** N Consistency Violations */
+            n_consistency_violations: number;
+            /** Admissibility Violations */
+            admissibility_violations: components["schemas"]["AdmissibilityViolation"][];
+            /** Consistency Violations */
+            consistency_violations: components["schemas"]["ConsistencyViolation"][];
+            astar: components["schemas"]["SearchRunOut"];
+        };
+        /** InferIn */
+        InferIn: {
+            network?: components["schemas"]["NetworkModel"] | null;
+            /**
+             * Prior
+             * @default 0.2
+             */
+            prior: number;
+            /**
+             * Query
+             * @default Trapped
+             */
+            query: string;
+            /**
+             * Evidence
+             * @default {}
+             */
+            evidence: {
+                [key: string]: boolean;
+            };
+            /**
+             * Samples
+             * @default 5000
+             */
+            samples: number;
+            /**
+             * Seed
+             * @default 0
+             */
+            seed: number;
+            /**
+             * Methods
+             * @default [
+             *       "rejection",
+             *       "likelihood_weighting",
+             *       "gibbs"
+             *     ]
+             */
+            methods: ("rejection" | "likelihood_weighting" | "gibbs")[];
+        };
+        /** InferOut */
+        InferOut: {
+            network: components["schemas"]["NetworkModel"];
+            /** Query */
+            query: string;
+            /** Evidence */
+            evidence: {
+                [key: string]: boolean;
+            };
+            /** Exact */
+            exact: components["schemas"]["ExactOut"][];
+            /** P True */
+            p_true: number;
+            /** Risk */
+            risk: number;
+            /** Sampled */
+            sampled: components["schemas"]["SampledOut"][];
         };
         /** IssueOut */
         IssueOut: {
@@ -507,12 +949,129 @@ export interface components {
                 [key: string]: number;
             };
         };
+        /** NetworkModel */
+        NetworkModel: {
+            /** Nodes */
+            nodes: components["schemas"]["NodeModel"][];
+        };
+        /** NodeModel */
+        NodeModel: {
+            /** Name */
+            name: string;
+            /** Parents */
+            parents: string[];
+            /** Cpt */
+            cpt: components["schemas"]["CptRow"][];
+        };
+        /** OrderIn */
+        OrderIn: {
+            /** Session Id */
+            session_id: string;
+            /** Tick */
+            tick?: number | null;
+            /** Seed */
+            seed?: number | null;
+            /**
+             * Restarts
+             * @default 5
+             */
+            restarts: number;
+            /**
+             * Sa Steps
+             * @default 600
+             */
+            sa_steps: number;
+            /**
+             * Sa Alpha
+             * @default 0.97
+             */
+            sa_alpha: number;
+            /**
+             * Ga Population
+             * @default 30
+             */
+            ga_population: number;
+            /**
+             * Ga Generations
+             * @default 60
+             */
+            ga_generations: number;
+            /**
+             * Ga Mutation
+             * @default 0.2
+             */
+            ga_mutation: number;
+        };
+        /** OrderOut */
+        OrderOut: {
+            /** Tick */
+            tick: number;
+            /** People */
+            people: components["schemas"]["OrderPerson"][];
+            /** Skipped */
+            skipped: string[];
+            /** Optimum */
+            optimum: number | null;
+            /** Rows */
+            rows: components["schemas"]["OrderRowOut"][];
+        };
+        /** OrderPerson */
+        OrderPerson: {
+            /** Id */
+            id: string;
+            /** Weight */
+            weight: number;
+            /** Exit */
+            exit: string;
+            /** From Agent */
+            from_agent: number;
+            /** To Exit */
+            to_exit: number;
+        };
+        /** OrderRowOut */
+        OrderRowOut: {
+            /** Method */
+            method: string;
+            /** Order */
+            order: string[];
+            /** Cost */
+            cost: number;
+            /** Evaluations */
+            evaluations: number;
+            /** Gap */
+            gap: number | null;
+            /** Time Ms */
+            time_ms: number;
+            /** Curve */
+            curve: number[];
+        };
         /** ParamsModel */
         ParamsModel: {
             /** P Spread */
             p_spread: number;
             weights: components["schemas"]["WeightsModel"];
             cost_model: components["schemas"]["CostModelModel"];
+            /**
+             * Sensor Noise
+             * @default 0
+             */
+            sensor_noise: number;
+            /**
+             * Fire Mode
+             * @default stochastic
+             * @enum {string}
+             */
+            fire_mode: "stochastic" | "adversarial";
+            /**
+             * Adversary Depth
+             * @default 3
+             */
+            adversary_depth: number;
+            /**
+             * Adversary K
+             * @default 1
+             */
+            adversary_k: number;
         };
         /** PersonModel */
         PersonModel: {
@@ -569,6 +1128,36 @@ export interface components {
             /** Old Cursor */
             old_cursor: number;
         };
+        /** PlanCompareIn */
+        PlanCompareIn: {
+            /** Session Id */
+            session_id: string;
+            /** Tick */
+            tick?: number | null;
+            /**
+             * Scope
+             * @default target
+             * @enum {string}
+             */
+            scope: "target" | "all";
+        };
+        /** PlanCompareOut */
+        PlanCompareOut: {
+            /** Tick */
+            tick: number;
+            /** Goal */
+            goal: string[];
+            /** People */
+            people: string[];
+            /** Note */
+            note: string;
+            /** Actions */
+            actions: number;
+            /** Rows */
+            rows: components["schemas"]["PlannerRow"][];
+            /** Equal Cost */
+            equal_cost: boolean;
+        };
         /** PlanStepOut */
         PlanStepOut: {
             /** Label */
@@ -593,6 +1182,27 @@ export interface components {
                 number
             ][];
         };
+        /** PlannerRow */
+        PlannerRow: {
+            /** Planner */
+            planner: string;
+            /** Found */
+            found: boolean;
+            /** Cost */
+            cost: number | null;
+            /** Steps */
+            steps: string[];
+            /** Expanded */
+            expanded: number;
+            /** Generated */
+            generated: number;
+            /** Max Frontier */
+            max_frontier: number;
+            /** Time Ms */
+            time_ms: number;
+            /** Reason */
+            reason: string;
+        };
         /** PriorityOut */
         PriorityOut: {
             /** Person Id */
@@ -607,6 +1217,89 @@ export interface components {
             score: number;
             /** Breakdown */
             breakdown: string;
+        };
+        /** ProfileOut */
+        ProfileOut: {
+            /** Agent Type */
+            agent_type: string;
+            /** Peas */
+            peas: {
+                [key: string]: string[];
+            };
+            /** Environment */
+            environment: components["schemas"]["PropertyOut"][];
+        };
+        /** ProofNodeOut */
+        ProofNodeOut: {
+            /** Goal */
+            goal: string;
+            /** Rule */
+            rule: string | null;
+            /** Children */
+            children: components["schemas"]["ProofNodeOut"][];
+        };
+        /** ProofOut */
+        ProofOut: {
+            /** Bindings */
+            bindings: {
+                [key: string]: string;
+            };
+            tree: components["schemas"]["ProofNodeOut"];
+        };
+        /** PropertyOut */
+        PropertyOut: {
+            /** Dimension */
+            dimension: string;
+            /** Value */
+            value: string;
+            /** Why */
+            why: string;
+        };
+        /** QueryIn */
+        QueryIn: {
+            /** Session Id */
+            session_id: string;
+            /** Goal */
+            goal: string;
+            /** Tick */
+            tick?: number | null;
+        };
+        /** QueryOut */
+        QueryOut: {
+            /** Goal */
+            goal: string;
+            /** Ground */
+            ground: boolean;
+            forward: components["schemas"]["ForwardOut"];
+            /** Backward */
+            backward: components["schemas"]["ProofOut"][];
+            /** Backward Steps */
+            backward_steps: number;
+            resolution: components["schemas"]["ResolutionOut"] | null;
+            /** Agree */
+            agree: boolean;
+        };
+        /** ResolutionOut */
+        ResolutionOut: {
+            /** Entailed */
+            entailed: boolean;
+            /** Steps */
+            steps: components["schemas"]["ResolutionStepOut"][];
+            /** Resolvents */
+            resolvents: number;
+            /** Reason */
+            reason: string;
+        };
+        /** ResolutionStepOut */
+        ResolutionStepOut: {
+            /** Clause */
+            clause: string;
+            /** Parent */
+            parent: string | null;
+            /** Side */
+            side: string | null;
+            /** Side Name */
+            side_name: string | null;
         };
         /** RuleOut */
         RuleOut: {
@@ -634,9 +1327,26 @@ export interface components {
              * Algorithm
              * @enum {string}
              */
-            algorithm: "bfs" | "ucs" | "astar";
+            algorithm: "bfs" | "dfs" | "dls" | "iddfs" | "ucs" | "greedy" | "astar" | "weighted_astar";
             /** Heuristic */
             heuristic?: ("manhattan" | "euclidean" | "zero" | "weighted") | null;
+        };
+        /** SampledOut */
+        SampledOut: {
+            /** Method */
+            method: string;
+            /** P True */
+            p_true: number | null;
+            /** Error */
+            error: number | null;
+            /** Samples */
+            samples: number;
+            /** Used */
+            used: number;
+            /** Time Ms */
+            time_ms: number;
+            /** Curve */
+            curve: components["schemas"]["CurvePoint"][];
         };
         /**
          * ScenarioModel
@@ -744,6 +1454,8 @@ export interface components {
             optimal_vs_ucs: boolean | null;
             /** Reason */
             reason: string;
+            /** Depth Limit */
+            depth_limit: number | null;
             /** Path */
             path: [
                 number,
@@ -768,6 +1480,11 @@ export interface components {
             scenario_id: string;
             /** Seed */
             seed: number;
+            /**
+             * Fire Mode
+             * @enum {string}
+             */
+            fire_mode: "stochastic" | "adversarial";
             snapshot: components["schemas"]["SnapshotOut"];
         };
         /** SnapshotOut */
@@ -790,6 +1507,8 @@ export interface components {
             };
             /** Derived */
             derived: components["schemas"]["DerivationOut"][];
+            /** Beliefs */
+            beliefs: components["schemas"]["BeliefOut"][];
             /** Priorities */
             priorities: components["schemas"]["PriorityOut"][];
             /** Target */
@@ -816,6 +1535,8 @@ export interface components {
             scenario_id: string;
             /** Seed */
             seed?: number | null;
+            /** Fire Mode */
+            fire_mode?: ("stochastic" | "adversarial") | null;
         };
         /** StateOut */
         StateOut: {
@@ -1412,6 +2133,48 @@ export interface operations {
             };
         };
     };
+    query_kb_query_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QueryIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueryOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
     search_compare_search_compare_post: {
         parameters: {
             query?: never;
@@ -1445,6 +2208,306 @@ export interface operations {
             };
             /** @description Conflict */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    heuristic_check_search_heuristic_check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HeuristicIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HeuristicOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    network_bayes_network_get: {
+        parameters: {
+            query?: {
+                prior?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NetworkModel"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    infer_bayes_infer_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InferIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InferOut"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
+    optimize_order_optimize_order_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    adversarial_move_adversarial_move_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdversarialIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdversarialOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    plan_compare_plan_compare_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanCompareIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanCompareOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    profile_agent_profile_get: {
+        parameters: {
+            query?: {
+                scenario_id?: string | null;
+                session_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

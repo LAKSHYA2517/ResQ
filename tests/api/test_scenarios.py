@@ -12,10 +12,10 @@ VALID: dict[str, Any] = {
 }
 
 
-def test_lists_the_nine_predefined_scenarios(client: TestClient) -> None:
+def test_lists_the_predefined_scenarios(client: TestClient) -> None:
     items = client.get("/scenarios").json()
     predefined = {i["id"]: i for i in items if i["predefined"]}
-    assert len(predefined) == 9
+    assert len(predefined) == 10  # the brief's nine plus Mass Evacuation for the optimizer
     assert predefined["showcase"] == {
         "id": "showcase",
         "name": "Showcase",

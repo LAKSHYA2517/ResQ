@@ -18,8 +18,14 @@ def test_headless_demo_runs_the_whole_workflow_and_replays_identically() -> None
     out = done.stdout
     for marker in (
         "Forward chaining",
-        "p2: 5×4 + 3×4 − 1×13 = 19",
+        "p2: 5×5 + 3×4 − 1×13 = 24",
         "astar+manhattan",
+        "iddfs",
+        "resolution True",
+        "likelihood weighting",
+        "exhaustive",
+        "(same move: True)",
+        "equal to forward: True",
         "USER EVENT NEW_FIRE",
         "INVALID:",
         "Outcome: complete",

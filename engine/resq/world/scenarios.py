@@ -19,6 +19,16 @@ from .terrain import CHAR_TO_TERRAIN, CostModel, Terrain
 SCENARIOS_DIR = Path(__file__).resolve().parents[3] / "scenarios"
 
 MIN_SIDE, MAX_SIDE = 5, 30
+FIRE_MODES = ("stochastic", "adversarial")
+PARAM_KEYS = {
+    "p_spread",
+    "weights",
+    "cost_model",
+    "sensor_noise",
+    "fire_mode",
+    "adversary_depth",
+    "adversary_k",
+}
 
 
 @dataclass(frozen=True)
@@ -39,6 +49,10 @@ class Params:
     p_spread: float = 0.0
     weights: Weights = field(default_factory=Weights)
     cost_model: CostModel = field(default_factory=CostModel)
+    sensor_noise: float = 0.0  # chance that a simulated sensor reading is flipped
+    fire_mode: str = "stochastic"  # or "adversarial": the fire plays its worst case
+    adversary_depth: int = 3  # plies the adversarial fire looks ahead
+    adversary_k: int = 1  # cells it may ignite per tick
 
 
 @dataclass(frozen=True)
@@ -77,6 +91,10 @@ class Scenario:
                 "p_spread": self.params.p_spread,
                 "weights": vars(self.params.weights).copy(),
                 "cost_model": vars(self.params.cost_model).copy(),
+                "sensor_noise": self.params.sensor_noise,
+                "fire_mode": self.params.fire_mode,
+                "adversary_depth": self.params.adversary_depth,
+                "adversary_k": self.params.adversary_k,
             },
         }
 
@@ -353,17 +371,40 @@ def _parse_params(raw: Any, p: _Parser) -> Params:
     if not isinstance(raw, dict):
         p.bad("params must be an object", "params")
         return Params()
-    for key in raw.keys() - {"p_spread", "weights", "cost_model"}:
+    for key in raw.keys() - PARAM_KEYS:
         p.bad(f"unknown params key {key!r}", "params")
-    p_spread = raw.get("p_spread", 0.0)
-    if not (_is_num(p_spread) and 0 <= p_spread <= 1):
-        p.bad(f"p_spread must be a number in [0, 1], got {p_spread!r}", "params.p_spread")
-        p_spread = 0.0
+
+    def unit(key: str) -> float:
+        v = raw.get(key, 0.0)
+        if _is_num(v) and 0 <= v <= 1:
+            return float(v)
+        p.bad(f"{key} must be a number in [0, 1], got {v!r}", f"params.{key}")
+        return 0.0
+
+    def whole(key: str, default: int, lo: int, hi: int) -> int:
+        v = raw.get(key, default)
+        if _is_int(v) and lo <= v <= hi:
+            return int(v)
+        p.bad(f"{key} must be an integer {lo}..{hi}, got {v!r}", f"params.{key}")
+        return default
+
+    fire_mode = raw.get("fire_mode", "stochastic")
+    if fire_mode not in FIRE_MODES:
+        p.bad(f"fire_mode must be one of {list(FIRE_MODES)}, got {fire_mode!r}", "params.fire_mode")
+        fire_mode = "stochastic"
     weights = Weights(**_numbers(raw.get("weights", {}), Weights, p, "params.weights"))
     costs = CostModel(**_numbers(raw.get("cost_model", {}), CostModel, p, "params.cost_model"))
     if min(costs.floor, costs.rubble, costs.exit) <= 0:
         p.bad("floor, rubble and exit costs must be > 0 (A* needs positive step costs)", "params")
-    return Params(float(p_spread), weights, costs)
+    return Params(
+        p_spread=unit("p_spread"),
+        weights=weights,
+        cost_model=costs,
+        sensor_noise=unit("sensor_noise"),
+        fire_mode=fire_mode,
+        adversary_depth=whole("adversary_depth", 3, 1, 5),
+        adversary_k=whole("adversary_k", 1, 1, 2),
+    )
 
 
 def _numbers(raw: Any, cls: type, p: _Parser, field_: str) -> dict[str, float]:

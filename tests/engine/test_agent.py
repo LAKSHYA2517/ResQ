@@ -398,3 +398,56 @@ def test_act_refuses_an_illegal_step_instead_of_making_it(shipped: dict[str, Sce
     state, memory, trace = act(s, sabotaged, head.memory)
     assert state is sabotaged and not memory.has_plan
     assert isinstance(trace[0], ActionFailed) and "impassable" in trace[0].reason
+
+
+# --- P4: Bayes risk and adversarial fire in the loop ---------------------------------------------
+
+
+def test_risk_in_the_priority_is_the_bayes_posterior(shipped: dict[str, Scenario]) -> None:
+    head = Simulation(shipped["showcase"]).head
+    beliefs = {b.person_id: b for b in head.beliefs}
+    assert set(beliefs) == {"p1", "p2", "p3"}
+    for p in head.priorities:
+        b = beliefs[p.person_id]
+        assert p.risk == b.risk == int(5 * b.p_trapped + 0.5)
+    assert dict(beliefs["p2"].evidence) == {"Smoke": True, "Heat": True, "Voice": True}
+    assert beliefs["p2"].risk == 5 and beliefs["p1"].risk == 0
+    assert beliefs["p2"].prior_fire == 0.8  # scenario baseline risk 4 -> prior 4/5
+
+
+def test_noisy_sensors_still_replay_exactly(shipped: dict[str, Scenario]) -> None:
+    base = shipped["showcase"]
+    noisy = replace(base, params=replace(base.params, sensor_noise=0.3))
+    sim = Simulation(noisy)
+    sim.run(60)
+    assert replay(noisy, (), sim.head.tick) == sim.history
+    readings = {b.evidence for s in sim.history for b in s.beliefs if b.person_id == "p1"}
+    assert len(readings) > 1  # the noise really changes what the agent senses
+    check_run_invariants(sim)
+
+
+def test_adversarial_fire_is_worse_than_chance_and_replays(shipped: dict[str, Scenario]) -> None:
+    base = shipped["showcase"]
+    worst = replace(base, params=replace(base.params, fire_mode="adversarial"))
+    sim = Simulation(worst)
+    end = sim.run(200)
+    normal = Simulation(base).run(200)
+    assert end.metrics.rescued < normal.metrics.rescued  # the fire plays to cut the agent off
+    assert end.status is RunStatus.STUCK and end.finished
+    assert replay(worst, (), end.tick) == sim.history
+    check_run_invariants(sim)
+    spreads = [e for s in sim.history for e in s.trace if e.kind == "FireSpread"]
+    assert spreads and all(len(e.ignited) == 1 for e in spreads)  # type: ignore[attr-defined]
+    searched = [e for s in sim.history for e in s.trace if e.kind == "GameSearched"]
+    assert searched and all(e.algorithm == "alphabeta" for e in searched)  # type: ignore[attr-defined]
+
+
+def test_adversarial_fire_does_nothing_without_a_leg_or_a_fire(
+    shipped: dict[str, Scenario],
+) -> None:
+    for name in ("impossible", "basic_rescue"):  # no plan / no fire to spread from
+        base = shipped[name]
+        sim = Simulation(replace(base, params=replace(base.params, fire_mode="adversarial")))
+        for _ in range(5):
+            sim.step()
+        assert sim.head.state.fire == base.fire

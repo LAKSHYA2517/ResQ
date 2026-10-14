@@ -24,7 +24,7 @@ test("load, play, inject a fire, see the replan and its reason", async ({ page }
   const session = await startShowcase(page);
 
   // What the Planning tab shows is exactly what the engine returned.
-  await page.getByRole("tab", { name: "Planning" }).click();
+  await page.getByRole("tab", { name: "Plan" }).click();
   for (const p of session.snapshot.priorities) {
     await expect(page.getByText(p.breakdown, { exact: false }).first()).toBeVisible();
   }
@@ -56,7 +56,7 @@ test("load, play, inject a fire, see the replan and its reason", async ({ page }
   await expect(page.getByText("Previous plan (dropped)")).toBeVisible();
 
   // The fact diff is on the Reasoning tab.
-  await page.getByRole("tab", { name: "Reasoning" }).click();
+  await page.getByRole("tab", { name: "Logic" }).click();
   await expect(page.getByText("Last event changed the knowledge base")).toBeVisible();
   for (const f of result.diff.added) {
     await expect(page.getByText(`+ ${f}`, { exact: true })).toBeVisible();
@@ -81,9 +81,9 @@ test("an impossible scenario is reported calmly with reasons", async ({ page }) 
   await page.getByLabel("Predefined scenario").selectOption({ label: "Impossible" });
   await expect(page.getByLabel("Name")).toHaveValue("Impossible");
   await page.getByRole("button", { name: "Validate → Start" }).click();
-  await page.getByRole("tab", { name: "Planning" }).click();
+  await page.getByRole("tab", { name: "Plan" }).click();
   await expect(page.getByText("No valid plan right now")).toBeVisible();
-  const panel = page.getByRole("tabpanel", { name: "Planning" });
+  const panel = page.getByRole("tabpanel", { name: "Plan" });
   await expect(panel.getByText(/A\* found no route/)).toBeVisible();
 });
 

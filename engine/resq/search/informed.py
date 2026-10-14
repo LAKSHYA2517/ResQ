@@ -1,4 +1,4 @@
-"""Best-first graph search: UCS (h = 0) and A* share this one core."""
+"""Best-first graph search: UCS, greedy, A* and weighted A* share this one core."""
 
 import heapq
 from collections.abc import Hashable
@@ -25,15 +25,22 @@ def best_first[S: Hashable](
     algorithm: str,
     heuristic: Heuristic[S] | None = None,
     snapshots: int = 64,
+    use_g: bool = True,
+    w: float = 1.0,
 ) -> tuple[SearchResult[S], Trace]:
-    """Expand the node with the lowest ``f = g + h``.
+    """Expand the node with the lowest ``f = g + w*h`` (``f = h`` when ``use_g`` is False).
 
     Tie-breaking (deterministic): lowest f, then lowest h (prefer nodes nearer the goal), then
     first generated. A node whose g improves after being closed is re-opened, so the result is
-    optimal for any *admissible* h (reopening never fires for a consistent one).
+    optimal for any *admissible* h (reopening never fires for a consistent one). Greedy
+    (``use_g=False``) never re-opens: it only cares how close a node looks, not what it cost.
     """
     t0 = perf_counter()
-    h: Heuristic[S] = heuristic if heuristic is not None else (lambda _s: 0.0)
+    base: Heuristic[S] = heuristic if heuristic is not None else (lambda _s: 0.0)
+
+    def h(state: S) -> float:
+        return w * base(state)
+
     start = problem.initial
     tie = count()
     g: dict[S, float] = {start: 0.0}
@@ -81,15 +88,15 @@ def best_first[S: Hashable](
         if problem.is_goal(s):
             return result(True, s)
         order.append(s)
-        trace.append(NodeExpanded(s, g[s], hs, g[s] + hs, len(frontier)))
+        trace.append(NodeExpanded(s, g[s], hs, (g[s] if use_g else 0.0) + hs, len(frontier)))
         for action, n, cost in problem.successors(s):
             g2 = g[s] + cost
-            if n in g and g2 >= g[n]:
+            if n in g and (not use_g or g2 >= g[n]):
                 continue
             g[n], parent[n] = g2, (s, action)
             closed.discard(n)
             hn = h(n)
-            heapq.heappush(heap, (g2 + hn, hn, next(tie), n))
+            heapq.heappush(heap, ((g2 if use_g else 0.0) + hn, hn, next(tie), n))
             frontier[n] = None
             generated += 1
         max_frontier = max(max_frontier, len(frontier))
@@ -103,3 +110,25 @@ def astar[S: Hashable](
     if heuristic is None:
         raise ValueError("astar needs a heuristic (use ucs for h = 0)")
     return best_first(problem, "astar", heuristic, snapshots)
+
+
+def greedy[S: Hashable](
+    problem: Problem[S], heuristic: Heuristic[S] | None = None, snapshots: int = 64
+) -> tuple[SearchResult[S], Trace]:
+    """Greedy best-first: always expand the node that *looks* closest (f = h). Fast, not optimal."""
+    if heuristic is None:
+        raise ValueError("greedy needs a heuristic")
+    return best_first(problem, "greedy", heuristic, snapshots, use_g=False)
+
+
+def weighted_astar[S: Hashable](
+    problem: Problem[S],
+    heuristic: Heuristic[S] | None = None,
+    snapshots: int = 64,
+    w: float = 2.0,
+) -> tuple[SearchResult[S], Trace]:
+    """f = g + w*h. For w > 1 the heuristic is inflated (inadmissible): fewer expansions, and a
+    path that costs at most w times the optimum when h itself is admissible."""
+    if heuristic is None:
+        raise ValueError("weighted_astar needs a heuristic")
+    return best_first(problem, "weighted_astar", heuristic, snapshots, w=w)

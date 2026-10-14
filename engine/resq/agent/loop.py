@@ -23,11 +23,13 @@ from ..planning.domain import PlanStep, build_domain
 from ..planning.fwd_planner import plan as make_plan
 from ..planning.monitor import remaining_cost, violation
 from ..planning.strips import Plan
+from ..search.adversarial import worst_case_ignition
 from ..search.problem import SearchResult
 from ..search.router import Router
 from ..trace import (
     ActionExecuted,
     ActionFailed,
+    FireSpread,
     NoValidPlan,
     PlanAdopted,
     PlanInvalidated,
@@ -36,6 +38,7 @@ from ..trace import (
     Trace,
     TraceEvent,
 )
+from ..uncertainty.models import Belief, assess
 from ..world.events import Event, EventType, apply_event
 from ..world.grid import Cell
 from ..world.scenarios import Scenario, initial_state
@@ -112,6 +115,7 @@ class Snapshot:
     finished: bool
     base_facts: tuple[Atom, ...]
     derived: tuple[Derivation, ...]
+    beliefs: tuple[Belief, ...]  # per waiting person: sensor evidence and the Bayes posterior
     priorities: tuple[PriorityScore, ...]
     route: tuple[Cell, ...]  # cells still to walk on the current leg, starting at the agent
     plan_change: PlanChange | None
@@ -187,6 +191,10 @@ def deliberate(
     waiting = [p for p in state.people if p.status is Status.WAITING]
     to_person = {p.id: router.route(state.agent.pos, p.pos) for p in waiting}
     urg = {p.id: urgency(p.urgency, state.tick, w) for p in waiting}
+    # REASON under uncertainty: Risk(P) = round(5 * P(Trapped | this tick's sensor readings)).
+    noise = scenario.params.sensor_noise
+    beliefs = tuple(assess(state, p, scenario.seed, noise) for p in waiting)
+    risk = {b.person_id: b.risk for b in beliefs}
     reachable = {pid for pid, r in to_person.items() if r.found}
     urgent = {pid for pid, u in urg.items() if u >= w.urgent_threshold}
     t1 = perf_counter()
@@ -195,7 +203,7 @@ def deliberate(
 
     # SELECT GOAL. Closed world: an exit is open unless Unavailable(e) was derived.
     ranked = rank(
-        score(pid, state.person(pid).risk, urg[pid], to_person[pid].cost or 0.0, w)
+        score(pid, risk[pid], urg[pid], to_person[pid].cost or 0.0, w)
         for pid in kb.constants("Eligible")
     )
     open_exits = [e for e in state.exits if not kb.holds(atom("Unavailable", e.id))]
@@ -306,6 +314,7 @@ def deliberate(
         finished=finished,
         base_facts=kb.base,
         derived=tuple(kb.derived.values()),
+        beliefs=beliefs,
         priorities=ranked,
         route=route,
         plan_change=change or earlier_change,
@@ -414,8 +423,27 @@ def enter(scenario: Scenario, entry: Entry, log: tuple[Event, ...]) -> Snapshot:
 def transition(scenario: Scenario, snapshot: Snapshot) -> Entry:
     """ACT, then fire spreads and the clock advances."""
     state, memory, trace = act(scenario, snapshot.state, snapshot.memory)
-    state, spread_trace = spread_tick(scenario, state)
+    if scenario.params.fire_mode == "adversarial":
+        state, spread_trace = _adversarial_tick(scenario, state, memory)
+    else:
+        state, spread_trace = spread_tick(scenario, state)
     return state, memory, trace + spread_trace
+
+
+def _adversarial_tick(scenario: Scenario, state: State, memory: Memory) -> tuple[State, Trace]:
+    """Worst-case fire: instead of spreading at random it ignites the frontier cell(s) that hurt
+    the agent's current leg the most, chosen by alpha-beta. Deterministic, so replay holds."""
+    params = scenario.params
+    leg = next((s.route[-1] for s in memory.steps[memory.cursor :] if s.route), None)
+    trace: Trace = []
+    if leg is not None and state.fire:
+        lit, trace = worst_case_ignition(
+            state, leg, params.cost_model, params.adversary_depth, params.adversary_k
+        )
+        if lit:
+            state = replace(state, fire=state.fire | frozenset(lit))
+            trace = [*trace, FireSpread(state.tick, tuple(sorted(lit)))]
+    return replace(state, tick=state.tick + 1), trace
 
 
 def replay(scenario: Scenario, log: tuple[Event, ...], ticks: int) -> list[Snapshot]:

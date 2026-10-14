@@ -30,6 +30,10 @@ export const DEFAULT_PARAMS: Scenario["params"] = {
     delta: 2,
   },
   cost_model: { floor: 1, rubble: 3, exit: 1, hot_extra: 4, pickup: 1, dropoff: 1 },
+  sensor_noise: 0,
+  fire_mode: "stochastic",
+  adversary_depth: 3,
+  adversary_k: 1,
 };
 
 export function blankDraft(rows = 10, cols = 10): Scenario {
@@ -143,7 +147,8 @@ export function parseImported(text: string): Scenario {
     ...d,
     scripted_events: d.scripted_events ?? [],
     params: {
-      p_spread: d.params?.p_spread ?? 0,
+      ...DEFAULT_PARAMS,
+      ...d.params,
       weights: { ...DEFAULT_PARAMS.weights, ...d.params?.weights },
       cost_model: { ...DEFAULT_PARAMS.cost_model, ...d.params?.cost_model },
     },

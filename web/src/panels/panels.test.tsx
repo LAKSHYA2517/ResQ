@@ -48,7 +48,7 @@ describe("PlanningPanel", () => {
     show(first);
     renderWithQuery(<PlanningPanel />);
     expect(screen.getByText("Evacuated(p2)")).toBeTruthy();
-    expect(screen.getByText(/p2: 5×4 \+ 3×4 − 1×13 = 19/)).toBeTruthy();
+    expect(screen.getByText(/p2: 5×5 \+ 3×4 − 1×13 = 24/)).toBeTruthy();
     expect(screen.getByText("Travel(c4_4, c7_8)")).toBeTruthy();
     expect(screen.getByText("Forward state-space A* expanded", { exact: false })).toBeTruthy();
   });
@@ -113,7 +113,7 @@ describe("ExplainDialog", () => {
     useUi.setState({ explain: "decision" });
     renderWithQuery(<ExplainDialog />);
     expect(screen.getByText("Why p2?")).toBeTruthy();
-    expect(screen.getByText(/p2: 5×4 \+ 3×4 − 1×13 = 19/)).toBeTruthy();
+    expect(screen.getByText(/p2: 5×5 \+ 3×4 − 1×13 = 24/)).toBeTruthy();
     expect(screen.getAllByText(/Eligible\(p2\)/).length).toBeGreaterThan(0);
     expect(screen.getByText("Engine trace")).toBeTruthy();
   });

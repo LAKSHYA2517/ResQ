@@ -237,3 +237,50 @@ def test_remaining_cost_uses_live_step_costs(make_scenario: Callable[..., Scenar
     hot = replace(state, fire=frozenset({beside}))
     assert violation(steps, 0, 0, hot, list(state.exits)) is None
     assert remaining_cost(steps, 0, 0, Router(hot, scenario.params.cost_model)) > planned_cost
+
+
+# --- regression planner ---------------------------------------------------------------------------
+
+from resq.planning.regression import one_place_one_load, plan_backward  # noqa: E402
+
+
+def test_regression_finds_the_same_plan_as_forward(shipped: dict[str, Scenario]) -> None:
+    _, domain = domain_for(shipped["basic_rescue"])
+    forward, _ = plan(domain.problem, domain.heuristic)
+    backward, trace = plan_backward(domain.problem, one_place_one_load)
+    assert labels(backward.steps) == labels(forward.steps)
+    assert backward.cost == forward.cost == 20
+    assert isinstance(trace[-1], PlanFound) and trace[-1].steps == tuple(labels(backward.steps))
+    assert sum(isinstance(t, PlanStateExpanded) for t in trace) == backward.expanded
+    first = next(t for t in trace if isinstance(t, PlanStateExpanded))
+    assert first.atoms == ("Evacuated(p1)",)  # regression starts from the goal
+
+
+def test_regression_reports_an_unreachable_goal(make_scenario: Callable[..., Scenario]) -> None:
+    s = make_scenario(exits=[{"id": "e1", "pos": [4, 4], "available": False}])
+    _, domain = domain_for(s)
+    backward, trace = plan_backward(domain.problem, one_place_one_load)
+    assert not backward.found and backward.steps == () and "Evacuated(p1)" in backward.reason
+    assert isinstance(trace[-1], PlanFailed)
+
+
+def test_consistency_pruning_changes_work_not_answers(shipped: dict[str, Scenario]) -> None:
+    _, domain = domain_for(shipped["multiple_people"])
+    pruned, _ = plan_backward(domain.problem, one_place_one_load)
+    plain, _ = plan_backward(domain.problem)
+    assert pruned.cost == plain.cost and pruned.expanded < plain.expanded
+    assert not one_place_one_load(frozenset({at((0, 0)), at((1, 1))}))
+    assert not one_place_one_load(frozenset({atom("Carrying", "a"), HANDS_FREE}))
+    assert one_place_one_load(frozenset({at((0, 0)), atom("Carrying", "a")}))
+
+
+@settings(max_examples=120, deadline=None)
+@given(rescue_scenarios())
+def test_prop_forward_and_regression_plans_cost_the_same(scenario: Scenario) -> None:
+    _, domain = domain_for(scenario)
+    forward, _ = plan(domain.problem, domain.heuristic)
+    backward, _ = plan_backward(domain.problem, one_place_one_load)
+    assert forward.found == backward.found
+    if forward.found:
+        assert math.isclose(forward.cost or 0, backward.cost or 0)
+        assert domain.problem.goal <= execute(domain.problem, backward.steps)

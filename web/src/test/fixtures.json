@@ -240,30 +240,68 @@
         "iteration": 5
       }
     ],
-    "priorities": [
+    "beliefs": [
+      {
+        "person_id": "p1",
+        "prior_fire": 0.2,
+        "evidence": {
+          "Smoke": false,
+          "Heat": false,
+          "Voice": false
+        },
+        "p_fire": 0.03191489361702129,
+        "p_trapped": 0.04609929078014187,
+        "risk": 0
+      },
       {
         "person_id": "p2",
-        "risk": 4.0,
-        "urgency": 4.0,
-        "path_cost": 13.0,
-        "score": 19.0,
-        "breakdown": "p2: 5\u00d74 + 3\u00d74 \u2212 1\u00d713 = 19"
+        "prior_fire": 0.8,
+        "evidence": {
+          "Smoke": true,
+          "Heat": true,
+          "Voice": true
+        },
+        "p_fire": 0.9851150202976996,
+        "p_trapped": 0.9113667117726658,
+        "risk": 5
       },
       {
         "person_id": "p3",
-        "risk": 2.0,
+        "prior_fire": 0.4,
+        "evidence": {
+          "Smoke": false,
+          "Heat": false,
+          "Voice": false
+        },
+        "p_fire": 0.08080808080808083,
+        "p_trapped": 0.07744107744107748,
+        "risk": 0
+      }
+    ],
+    "priorities": [
+      {
+        "person_id": "p2",
+        "risk": 5.0,
+        "urgency": 4.0,
+        "path_cost": 13.0,
+        "score": 24.0,
+        "breakdown": "p2: 5\u00d75 + 3\u00d74 \u2212 1\u00d713 = 24"
+      },
+      {
+        "person_id": "p3",
+        "risk": 0.0,
         "urgency": 2.0,
         "path_cost": 7.0,
-        "score": 9.0,
-        "breakdown": "p3: 5\u00d72 + 3\u00d72 \u2212 1\u00d77 = 9"
+        "score": -1.0,
+        "breakdown": "p3: 5\u00d70 + 3\u00d72 \u2212 1\u00d77 = -1"
       },
       {
         "person_id": "p1",
-        "risk": 1.0,
+        "risk": 0.0,
         "urgency": 1.0,
         "path_cost": 6.0,
-        "score": 2.0,
-        "breakdown": "p1: 5\u00d71 + 3\u00d71 \u2212 1\u00d76 = 2"
+        "score": -3.0,
+        "breakdown": "p1: 5\u00d70 + 3\u00d71 \u2212 1\u00d76 = -3"
       }
     ],
     "target": "p2",
@@ -406,10 +444,10 @@
       "kb_derived": 13,
       "kb_iterations": 6,
       "timings_ms": {
-        "search": 0.2373750030528754,
-        "reason": 0.846249982714653,
-        "plan": 0.208500016015023,
-        "total": 1.3318749843165278
+        "search": 0.46016499982215464,
+        "reason": 1.6814580012578517,
+        "plan": 0.3657089837361127,
+        "total": 2.9087919974699616
       }
     }
   },
@@ -789,30 +827,68 @@
         "iteration": 5
       }
     ],
-    "priorities": [
+    "beliefs": [
+      {
+        "person_id": "p1",
+        "prior_fire": 0.2,
+        "evidence": {
+          "Smoke": false,
+          "Heat": false,
+          "Voice": false
+        },
+        "p_fire": 0.03191489361702129,
+        "p_trapped": 0.04609929078014187,
+        "risk": 0
+      },
       {
         "person_id": "p2",
-        "risk": 4.0,
-        "urgency": 4.5,
-        "path_cost": 14.0,
-        "score": 19.5,
-        "breakdown": "p2: 5\u00d74 + 3\u00d74.5 \u2212 1\u00d714 = 19.5"
+        "prior_fire": 0.8,
+        "evidence": {
+          "Smoke": true,
+          "Heat": true,
+          "Voice": true
+        },
+        "p_fire": 0.9851150202976996,
+        "p_trapped": 0.9113667117726658,
+        "risk": 5
       },
       {
         "person_id": "p3",
-        "risk": 2.0,
+        "prior_fire": 0.4,
+        "evidence": {
+          "Smoke": false,
+          "Heat": false,
+          "Voice": false
+        },
+        "p_fire": 0.08080808080808083,
+        "p_trapped": 0.07744107744107748,
+        "risk": 0
+      }
+    ],
+    "priorities": [
+      {
+        "person_id": "p2",
+        "risk": 5.0,
+        "urgency": 4.5,
+        "path_cost": 14.0,
+        "score": 24.5,
+        "breakdown": "p2: 5\u00d75 + 3\u00d74.5 \u2212 1\u00d714 = 24.5"
+      },
+      {
+        "person_id": "p3",
+        "risk": 0.0,
         "urgency": 2.5,
         "path_cost": 6.0,
-        "score": 11.5,
-        "breakdown": "p3: 5\u00d72 + 3\u00d72.5 \u2212 1\u00d76 = 11.5"
+        "score": 1.5,
+        "breakdown": "p3: 5\u00d70 + 3\u00d72.5 \u2212 1\u00d76 = 1.5"
       },
       {
         "person_id": "p1",
-        "risk": 1.0,
+        "risk": 0.0,
         "urgency": 1.5,
         "path_cost": 11.0,
-        "score": -1.5,
-        "breakdown": "p1: 5\u00d71 + 3\u00d71.5 \u2212 1\u00d711 = -1.5"
+        "score": -6.5,
+        "breakdown": "p1: 5\u00d70 + 3\u00d71.5 \u2212 1\u00d711 = -6.5"
       }
     ],
     "target": "p2",
@@ -1015,10 +1091,10 @@
       "kb_derived": 27,
       "kb_iterations": 6,
       "timings_ms": {
-        "search": 0.15691600856371224,
-        "reason": 0.8521249983459711,
-        "plan": 0.14920797548256814,
-        "total": 1.149999996414408
+        "search": 0.32379297772422433,
+        "reason": 2.02191699645482,
+        "plan": 0.3096250002272427,
+        "total": 2.8797920094802976
       }
     }
   },
@@ -1076,6 +1152,20 @@
       "Waiting": 1
     },
     "derived": [],
+    "beliefs": [
+      {
+        "person_id": "p1",
+        "prior_fire": 0.8,
+        "evidence": {
+          "Smoke": false,
+          "Heat": false,
+          "Voice": false
+        },
+        "p_fire": 0.3453237410071944,
+        "p_trapped": 0.2470023980815349,
+        "risk": 1
+      }
+    ],
     "priorities": [],
     "target": null,
     "plan": [],
@@ -1119,10 +1209,10 @@
       "kb_derived": 0,
       "kb_iterations": 1,
       "timings_ms": {
-        "search": 0.1612920023035258,
-        "reason": 0.49158299225382507,
-        "plan": 0.0051670067477971315,
-        "total": 0.6927080103196204
+        "search": 0.3194579912815243,
+        "reason": 1.0083749948535115,
+        "plan": 0.00937501317821443,
+        "total": 1.4954580110497773
       }
     }
   },

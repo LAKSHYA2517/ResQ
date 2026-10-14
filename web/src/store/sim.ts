@@ -5,6 +5,7 @@ import {
   type Cell,
   type EventResult,
   type EventTypeName,
+  type FireMode,
   type Scenario,
   type Snapshot,
   WS_URL,
@@ -14,6 +15,7 @@ import {
 interface SimStore {
   sessionId: string | null;
   scenarioId: string | null;
+  fireMode: FireMode;
   head: Snapshot | null; // the live tick
   cache: Record<number, Snapshot>; // ticks seen so far (the scrubber's source)
   rev: number; // bumps on every snapshot, including same-tick updates after an event
@@ -26,7 +28,7 @@ interface SimStore {
   pick: EventTypeName | null; // waiting for a cell click to inject this event
   highlight: Cell[]; // cells to flash on the grid (provenance, log clicks)
 
-  start: (scenarioId: string, seed?: number) => Promise<void>;
+  start: (scenarioId: string, seed?: number, fireMode?: FireMode) => Promise<void>;
   startDraft: (draft: Scenario) => Promise<boolean>;
   step: () => Promise<void>;
   reset: () => Promise<void>;
@@ -69,10 +71,11 @@ export const useSim = create<SimStore>((set, get) => {
     socket = ws;
   };
 
-  const begin = (id: string, scenarioId: string, head: Snapshot) => {
+  const begin = (id: string, scenarioId: string, head: Snapshot, fireMode: FireMode) => {
     set({
       sessionId: id,
       scenarioId,
+      fireMode,
       head,
       cache: { [head.tick]: head },
       rev: 1,
@@ -104,6 +107,7 @@ export const useSim = create<SimStore>((set, get) => {
   return {
     sessionId: null,
     scenarioId: null,
+    fireMode: "stochastic",
     head: null,
     cache: {},
     rev: 0,
@@ -116,9 +120,9 @@ export const useSim = create<SimStore>((set, get) => {
     pick: null,
     highlight: [],
 
-    start: async (scenarioId, seed) => {
-      const session = await guarded(() => api.start(scenarioId, seed));
-      if (session) begin(session.session_id, scenarioId, session.snapshot);
+    start: async (scenarioId, seed, fireMode) => {
+      const session = await guarded(() => api.start(scenarioId, seed, fireMode));
+      if (session) begin(session.session_id, scenarioId, session.snapshot, session.fire_mode);
     },
 
     startDraft: async (draft) => {
@@ -127,7 +131,7 @@ export const useSim = create<SimStore>((set, get) => {
         return { id: created.id, ...(await api.start(created.id)) };
       });
       if (!session) return false;
-      begin(session.session_id, session.id, session.snapshot);
+      begin(session.session_id, session.id, session.snapshot, session.fire_mode);
       return true;
     },
 

@@ -17,6 +17,8 @@ Full spec: [RESQ_AI_AGENT_BRIEF.md](RESQ_AI_AGENT_BRIEF.md) (section numbers bel
 | `make demo` | Headless run of the full workflow, offline (`make demo ARGS="--scenario triage_dilemma --quiet"`) |
 | `make bench` | Stub until P5; exits 1 with a message |
 
+Regenerate frontend test fixtures after a snapshot schema change: `uv run python scripts/make_fixtures.py`.
+
 Single Python test: `uv run pytest tests/engine/test_x.py::test_name --no-cov`.
 Format Python: `uv run ruff format .`; frontend: `pnpm --dir web exec biome check --write src`.
 
@@ -33,7 +35,7 @@ web/           Vite + React 19 + TS strict + Tailwind v4 (src/api/schema.d.ts is
 scenarios/     *.json scenario files (schema: brief §6.1)
 tests/         engine/ api/ e2e/
 docs/          ARCHITECTURE, SYLLABUS_MAP, VIVA_QA, ETHICS, DEMO_SCRIPT (written in P6; ETHICS in P5)
-scripts/       bench.py, demo_headless.py
+scripts/       demo_headless.py, make_fixtures.py (bench.py arrives in P5)
 ```
 
 Python is `>=3.12` managed by `uv` (system Python is 3.9 — never use it). `resq` and `api` are installed
@@ -62,6 +64,8 @@ editable into `.venv` via hatch, so `import resq` / `import api` work from anywh
 - Frontend tests that need a snapshot use `web/src/test/fixtures.json` (real engine output), not hand-written objects.
 - `mypy --strict` clean on `engine/`; ruff line length 100; TS `strict` + `noUncheckedIndexedAccess`.
 - Tiers: MUST and SHOULD are in scope; COULD only after P6 is done and green.
+- `Risk(P)` comes from the Bayes net (`uncertainty/models.py`), not from the scenario's `risk` field, which is only the prior.
+- A new analysis feature gets: an engine function returning `(result, trace)`, an API route that copies it, a panel that renders it, an API test against the direct engine call, and a line in `tests/e2e/p4.spec.ts`.
 - Shortcuts with a known ceiling get a `ponytail:` comment naming the ceiling and the upgrade path.
 
 ## Workflow rules

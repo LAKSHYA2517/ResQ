@@ -1,6 +1,9 @@
+import { useMutation } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { api } from "../api/client";
 import { Btn, Chip, Empty, fmt, Section } from "../components/ui";
 import { eventsOf } from "../lib/trace";
-import { useView } from "../store/sim";
+import { useSim, useView } from "../store/sim";
 import { useUi } from "../store/ui";
 
 const ICON = { done: "✓", current: "▶", pending: "○" } as const;
@@ -153,6 +156,8 @@ export function PlanningPanel() {
         </Section>
       )}
 
+      <PlannerCompare />
+
       {view.route.length > 1 && (
         <Section title="Current route">
           <p className="text-sm text-dim">
@@ -165,5 +170,96 @@ export function PlanningPanel() {
         </Section>
       )}
     </div>
+  );
+}
+
+/** Forward (progression) vs backward (regression) planning on the same STRIPS problem. */
+export function PlannerCompare() {
+  const view = useView();
+  const sessionId = useSim((s) => s.sessionId);
+  const focus = useUi((s) => s.focus);
+  const setFocus = useUi((s) => s.setFocus);
+  const [scope, setScope] = useState<"target" | "all">("all");
+  const run = useMutation({
+    mutationFn: (sc: "target" | "all") =>
+      api.planCompare({ session_id: sessionId ?? "", tick: view?.tick, scope: sc }),
+  });
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fire once per focus request
+  useEffect(() => {
+    if (focus === "planners" && sessionId) {
+      setFocus(null);
+      run.mutate(scope);
+    }
+  }, [focus, sessionId]);
+
+  const out = run.data?.tick === view?.tick ? run.data : undefined;
+  return (
+    <Section title="Forward vs backward planning">
+      <div className="flex items-end gap-2">
+        <label className="flex-1 text-xs text-dim">
+          Goal
+          <select
+            className="mt-1 w-full rounded-md border border-line bg-raised px-2 py-1.5 text-sm text-ink"
+            value={scope}
+            onChange={(e) => setScope(e.target.value as "target" | "all")}
+          >
+            <option value="all">Evacuate everyone eligible</option>
+            <option value="target">Evacuate the current target</option>
+          </select>
+        </label>
+        <Btn disabled={run.isPending || !sessionId} onClick={() => run.mutate(scope)}>
+          {run.isPending ? "Planning…" : "Compare planners"}
+        </Btn>
+      </div>
+      {run.isError && <p className="mt-2 text-sm text-warn">{run.error.message}</p>}
+      {out && (
+        <div className="mt-3">
+          <p className="font-mono text-xs text-dim">
+            goal: {out.goal.join(" ∧ ")} · {out.actions} ground actions
+          </p>
+          {out.note && <p className="mt-1 text-xs text-warn">{out.note}</p>}
+          <table className="mt-2 w-full text-left text-xs">
+            <thead className="text-dim">
+              <tr>
+                <th className="py-1 font-medium">Planner</th>
+                <th className="px-1 text-right font-medium">Cost</th>
+                <th className="px-1 text-right font-medium">Steps</th>
+                <th className="px-1 text-right font-medium">Expanded</th>
+                <th className="px-1 text-right font-medium">ms</th>
+              </tr>
+            </thead>
+            <tbody>
+              {out.rows.map((r) => (
+                <tr key={r.planner} className="border-t border-line" title={r.steps.join(" → ")}>
+                  <td className="py-1.5 pr-1">{r.planner}</td>
+                  <td className="px-1 text-right tabular-nums">{fmt(r.cost)}</td>
+                  <td className="px-1 text-right tabular-nums">{r.found ? r.steps.length : "–"}</td>
+                  <td className="px-1 text-right tabular-nums">{r.expanded}</td>
+                  <td className="px-1 text-right tabular-nums">{r.time_ms.toFixed(1)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="mt-2">
+            <Chip tone={out.equal_cost ? "go" : "bad"}>
+              {out.equal_cost ? "✓ all planners found the same cost" : "✗ costs differ"}
+            </Chip>
+          </div>
+          {out.rows[0]?.found && (
+            <ol className="mt-2 list-decimal space-y-0.5 pl-5 font-mono text-xs text-dim">
+              {out.rows[0].steps.map((s, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: a plan is an ordered list
+                <li key={`${s}-${i}`}>{s}</li>
+              ))}
+            </ol>
+          )}
+          <p className="mt-2 text-xs text-dim">
+            Forward search expands world states from the start; regression expands sets of sub-goals
+            from the goal. Both are optimal here, so their costs must match.
+          </p>
+        </div>
+      )}
+    </Section>
   );
 }

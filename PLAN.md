@@ -42,7 +42,6 @@ P1 decisions worth remembering (details go in `docs/ARCHITECTURE.md` in P6):
 - A `WAITING` person on a fire cell becomes `TRAPPED` (and reverts if the fire is extinguished). "Cut off" trapping is derived by the KB from search in P2.
 - Search tie-break: lowest f, then lowest h, then first generated; successors in U, D, L, R order. BFS tests the goal at generation (AIMA); UCS/A* at expansion. Closed nodes are re-opened if g improves, so A* is optimal for any admissible h.
 - Events that conflict with the state are *rejected with a trace entry* rather than raising, so a scripted event can never crash a run.
-- **P4 tuning to do:** in Showcase, BFS already matches UCS on the far critical person p2 (cost 13). When DFS/Greedy land, check they differ there for demo step 7; if not, add rubble on p2's direct route.
 
 ## P2 — Original plan complete
 - [x] Logic: terms + parser, unification (MGU, occurs check), KB with provenance, forward chaining to a fixpoint, the 10 core rules
@@ -84,14 +83,27 @@ P3 decisions worth remembering:
 - Left for P6: presentation mode, command palette, run-report export. Left for P4: Syllabus/Agent/Optimize/Uncertainty tabs, race view, heuristic lab, "Prove it".
 
 ## P4 — MUST extensions
-- [ ] DFS / DLS / IDDFS / Greedy / weighted A*, Algorithm Race, Heuristic Lab (`/search/compare`, `/search/heuristic-check`)
-- [ ] Unification UI, backward chaining + proof tree, resolution refutation, "Prove it" (`/kb/query`)
-- [ ] Bayes net: enumeration, variable elimination, rejection / likelihood weighting / Gibbs, convergence (`/bayes/infer`); Risk feeds priority
-- [ ] Order optimizer: hill climbing, SA, GA vs greedy vs exhaustive (`/optimize/order`)
-- [ ] Adversarial fire: minimax + alpha-beta, same move, pruning counters (`/adversarial/move`)
-- [ ] Regression planner; forward = regression cost (`/plan/compare`)
-- [ ] Agent/PEAS panel, Syllabus panel with "Run it" buttons
-- [ ] Every MUST row of brief §3 runs from the UI and has tests
+- [x] Search: DFS, DLS, IDDFS, Greedy, weighted A* (eight algorithms, one interface); Algorithm Race; Heuristic Lab (`/search/compare`, `/search/heuristic-check`)
+- [x] Logic: backward chaining with proof trees, resolution refutation, "Prove it" console (`/kb/query`); forward, backward and resolution agree on every shipped scenario
+- [x] Uncertainty: Bayes net, enumeration, variable elimination, rejection / likelihood weighting / Gibbs, convergence chart (`/bayes/infer`, `/bayes/network`); the posterior is the Risk used by the priority function
+- [x] Order optimizer: hill climbing, simulated annealing, genetic algorithm vs greedy vs exhaustive, convergence curves (`/optimize/order`)
+- [x] Adversarial fire: minimax + alpha-beta, same move and value, pruning counters (`/adversarial/move`); worst-case fire as a session mode
+- [x] Regression planner; forward and regression costs equal (`/plan/compare`)
+- [x] Agent/PEAS panel with environment properties derived from the scenario (`/agent/profile`); Syllabus panel with "Run it"
+- [x] Every MUST row of brief §3 runs from the UI and has tests (`make check`: 266 pytest, 51 vitest; `make e2e`: 9 browser tests incl. the full 16-step guided demo; 20/20 mutation spot-checks killed)
+
+P4 decisions worth remembering:
+- **Risk is now the Bayes posterior.** `Risk(P) = round(5 × P(Trapped | Smoke, Heat, Voice))` by exact inference, every tick. The scenario's `risk` field (0–5) is the *prior* P(Fire) = risk/5 clamped to [0.05, 0.95]. Sensors are simulated from the true state: smoke within 2 cells of fire; heat and voice when the person's cell is Hot or burning. `params.sensor_noise` (default 0) flips readings with an RNG keyed on (seed, tick, person, sensor), so replay still holds. The scenario outcomes tuned in P2 did not change.
+- **DLS/IDDFS use a depth-stamped explored set** (re-expand a cell only when reached shallower). A plain explored set makes IDDFS incomplete; path-only cycle checking is exponential on an open grid.
+- **Resolution strategy:** set of support + input resolution on the leftmost literal (complete for Horn clauses). `resolve()` itself is the general binary rule with unification and is tested on non-Horn propositional clauses. Ground goals only.
+- **Backward chaining proves from base facts only**, never from forward-derived facts, so the two methods are an independent check on each other.
+- **Fire game:** the fire may not ignite the agent's cell or the leg's destination (otherwise any game beside a fire is decided in one move), and considers only the 6 frontier cells nearest the agent. In `fire_mode: adversarial` the fire lights alpha-beta's choice each tick instead of spreading at random; the agent still plans normally, and loses every shipped scenario with fire in that mode. That is the honest worst case, not a bug.
+- **Order optimizer objective:** Σ weight × completion time, weight = w_r·Risk + w_u·Urgency, exit = nearest by A*. It is an analysis tool; the agent still picks one target at a time by priority.
+- **Regression** searches sets of sub-goals with uniform cost; an optional domain invariant (one location, one load) prunes impossible sets. `/plan/compare` caps "everyone" at the 4 highest-priority people.
+- A 10th scenario, **Mass Evacuation** (7 people, static fire), exists so the optimizer has 5040 orders to search.
+- UI: tabs are Logic · Search · Plan · Bayes · Optimize · Agent · Syllabus. Charts use Recharts; proof trees are nested lists and the Bayes net is inline SVG (React Flow not needed, so not installed). The race is a modal, so the guided demo asks you to close it before Next.
+- Showcase check from P1: on p2, DFS is costlier than UCS (21 vs 13); Greedy happens to be optimal there. Demo captions say exactly that.
+- `scripts/make_fixtures.py` regenerates the frontend test fixtures from the engine.
 
 ## P5 — SHOULD
 - [ ] Planning graph with mutex links + viewer

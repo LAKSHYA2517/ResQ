@@ -25,10 +25,11 @@ EXPECTED = {
     "triage_dilemma",
     "impossible",
     "showcase",
+    "mass_evacuation",
 }
 
 
-def test_all_nine_predefined_scenarios_ship_and_validate(shipped: dict[str, Scenario]) -> None:
+def test_all_predefined_scenarios_ship_and_validate(shipped: dict[str, Scenario]) -> None:
     assert set(shipped) == EXPECTED
 
 
@@ -114,6 +115,10 @@ BAD: list[tuple[str, dict[str, Any], str, tuple[int, int] | None]] = [
     ("bad p_spread", {"params": {"p_spread": 2}}, "p_spread", None),
     ("zero cost", {"params": {"cost_model": {"floor": 0}}}, "must be > 0", None),
     ("unknown param", {"params": {"nope": 1}}, "unknown params key", None),
+    ("bad noise", {"params": {"sensor_noise": 1.5}}, "sensor_noise must be", None),
+    ("bad fire mode", {"params": {"fire_mode": "angry"}}, "fire_mode must be", None),
+    ("bad depth", {"params": {"adversary_depth": 9}}, "adversary_depth must be", None),
+    ("bad k", {"params": {"adversary_k": 0}}, "adversary_k must be", None),
     (
         "scripted FIRE_SPREAD",
         {"scripted_events": [{"tick": 1, "type": "FIRE_SPREAD", "args": {}}]},

@@ -13,12 +13,26 @@ import { goToStep } from "./demo";
 import { cellName, key } from "./lib/cells";
 import { draftToState } from "./lib/draft";
 import type { Scene } from "./lib/draw";
+import { AgentPanel } from "./panels/AgentPanel";
+import { OptimizePanel } from "./panels/OptimizePanel";
 import { PlanningPanel } from "./panels/PlanningPanel";
 import { ReasoningPanel } from "./panels/ReasoningPanel";
 import { SearchPanel } from "./panels/SearchPanel";
+import { SyllabusPanel } from "./panels/SyllabusPanel";
+import { UncertaintyPanel } from "./panels/UncertaintyPanel";
 import { useBuilder } from "./store/builder";
 import { useSim, useView } from "./store/sim";
 import { type Tab, useUi } from "./store/ui";
+
+const TABS: [Tab, string][] = [
+  ["reasoning", "Logic"],
+  ["search", "Search"],
+  ["planning", "Plan"],
+  ["uncertainty", "Bayes"],
+  ["optimize", "Optimize"],
+  ["agent", "Agent"],
+  ["syllabus", "Syllabus"],
+];
 
 const reducedMotion =
   typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -195,7 +209,7 @@ export function App() {
         </div>
       )}
 
-      <div className="grid min-h-0 flex-1 grid-cols-[290px_minmax(0,1fr)_400px]">
+      <div className="grid min-h-0 flex-1 grid-cols-[280px_minmax(0,1fr)_430px]">
         <aside className="min-h-0 border-r border-line bg-panel" aria-label="Scenario">
           {running ? <RunSidebar /> : <Builder />}
         </aside>
@@ -251,17 +265,11 @@ export function App() {
             className="flex min-h-0 flex-1 flex-col"
           >
             <Tabs.List className="flex border-b border-line" aria-label="Analysis panels">
-              {(
-                [
-                  ["reasoning", "Reasoning"],
-                  ["search", "Search"],
-                  ["planning", "Planning"],
-                ] as const
-              ).map(([id, text]) => (
+              {TABS.map(([id, text]) => (
                 <Tabs.Trigger
                   key={id}
                   value={id}
-                  className="flex-1 border-b-2 border-transparent px-3 py-2.5 text-sm text-dim data-[state=active]:border-accent data-[state=active]:text-ink"
+                  className="flex-1 border-b-2 border-transparent px-1 py-2.5 text-xs text-dim data-[state=active]:border-accent data-[state=active]:text-ink"
                 >
                   {text}
                 </Tabs.Trigger>
@@ -275,6 +283,18 @@ export function App() {
             </Tabs.Content>
             <Tabs.Content value="planning" className="min-h-0 flex-1">
               <PlanningPanel />
+            </Tabs.Content>
+            <Tabs.Content value="uncertainty" className="min-h-0 flex-1">
+              <UncertaintyPanel />
+            </Tabs.Content>
+            <Tabs.Content value="optimize" className="min-h-0 flex-1">
+              <OptimizePanel />
+            </Tabs.Content>
+            <Tabs.Content value="agent" className="min-h-0 flex-1">
+              <AgentPanel />
+            </Tabs.Content>
+            <Tabs.Content value="syllabus" className="min-h-0 flex-1">
+              <SyllabusPanel />
             </Tabs.Content>
           </Tabs.Root>
         </aside>

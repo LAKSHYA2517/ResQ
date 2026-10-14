@@ -2,19 +2,29 @@ import { describe, expect, it } from "vitest";
 import { STEPS } from "./demo";
 
 describe("guided demo", () => {
-  it("covers the brief's twelve steps plus the Impossible scenario", () => {
-    expect(STEPS).toHaveLength(14);
-    expect(STEPS[0]?.title).toBe("Load Showcase");
-    expect(STEPS.at(-1)?.title).toBe("Impossible scenario");
+  it("covers the brief's twelve steps, Prove it, and the Impossible scenario", () => {
+    expect(STEPS.map((s) => s.title)).toEqual([
+      "Load Showcase",
+      "The state is structured data",
+      "Facts and rules",
+      "Forward chaining",
+      "Prove it",
+      "Bayesian sensor network",
+      "Priority scores",
+      "Algorithm race",
+      "Rescue-order optimizer",
+      "Plan",
+      "Execute",
+      "Fire on the route",
+      "Fact diff and the replan",
+      "Adversarial fire",
+      "Final outcome",
+      "Impossible scenario",
+    ]);
   });
 
-  it("never fakes a step: unbuilt steps say which phase builds them and run nothing", () => {
-    const later = STEPS.filter((s) => s.later);
-    expect(later.map((s) => s.title)).toEqual([
-      "Bayesian sensor network",
-      "Rescue-order optimizer",
-    ]);
-    for (const s of later) {
+  it("never fakes a step: anything unbuilt names its phase and runs nothing", () => {
+    for (const s of STEPS.filter((s) => s.later)) {
       expect(s.run).toBeUndefined();
       expect(s.later).toMatch(/^Phase \d/);
     }

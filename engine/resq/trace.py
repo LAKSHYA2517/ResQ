@@ -167,3 +167,58 @@ class ActionFailed(TraceEvent):
     tick: int
     action: str
     reason: str
+
+
+# --- logic: backward chaining and resolution -----------------------------------------------------
+
+
+@dataclass(frozen=True)
+class BackwardStep(TraceEvent):
+    depth: int
+    goal: str
+    outcome: str  # "fact", "try <rule>", "fail" or "depth limit"
+
+
+@dataclass(frozen=True)
+class Resolved(TraceEvent):
+    clause: str
+    side: str
+    resolvent: str
+
+
+# --- uncertainty ----------------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class FactorEliminated(TraceEvent):
+    variable: str
+    joined_scope: tuple[str, ...]
+    rows: int
+
+
+@dataclass(frozen=True)
+class InferenceDone(TraceEvent):
+    method: str
+    query: str
+    p_true: float | None
+    work: int  # exact: table rows touched; sampling: samples drawn
+
+
+# --- local search, adversarial search --------------------------------------------------
+
+
+@dataclass(frozen=True)
+class OptimizerDone(TraceEvent):
+    method: str
+    order: tuple[int, ...]
+    cost: float
+    evaluations: int
+
+
+@dataclass(frozen=True)
+class GameSearched(TraceEvent):
+    algorithm: str  # "minimax" or "alphabeta"
+    depth: int
+    value: float | None  # None = the agent is cut off (infinite cost)
+    nodes: int
+    cutoffs: int

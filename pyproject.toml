@@ -36,7 +36,7 @@ src = [".", "engine"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
-allowed-confusables = ["×", "−"]  # used on purpose in priority breakdowns
+allowed-confusables = ["×", "−", "∨"]  # used on purpose in breakdowns and clauses
 
 [tool.mypy]
 files = ["engine", "api", "tests", "scripts"]

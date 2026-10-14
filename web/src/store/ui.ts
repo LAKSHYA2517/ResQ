@@ -2,7 +2,14 @@ import { create } from "zustand";
 import type { Cell, Compare } from "../api/client";
 
 export type Mode = "build" | "run";
-export type Tab = "reasoning" | "search" | "planning";
+export type Tab =
+  | "reasoning"
+  | "search"
+  | "planning"
+  | "uncertainty"
+  | "optimize"
+  | "agent"
+  | "syllabus";
 export type Explain = "decision" | "route" | "replan";
 
 export interface Overlay {
@@ -19,6 +26,7 @@ interface UiStore {
   explain: Explain | null;
   showState: boolean; // the "state as structured data" section in Reasoning
   demoStep: number | null; // null = guided demo is off
+  focus: string | null; // a section a "Run it" link or demo step asks a panel to act on
   setMode: (m: Mode) => void;
   setTab: (t: Tab) => void;
   setOverlay: (o: Overlay | null) => void;
@@ -26,6 +34,7 @@ interface UiStore {
   setExplain: (e: Explain | null) => void;
   setShowState: (on: boolean) => void;
   setDemoStep: (n: number | null) => void;
+  setFocus: (f: string | null) => void;
 }
 
 export const useUi = create<UiStore>((set) => ({
@@ -36,6 +45,7 @@ export const useUi = create<UiStore>((set) => ({
   explain: null,
   showState: false,
   demoStep: null,
+  focus: null,
   setMode: (mode) => set({ mode }),
   setTab: (tab) => set({ tab }),
   setOverlay: (overlay) => set({ overlay }),
@@ -43,4 +53,5 @@ export const useUi = create<UiStore>((set) => ({
   setExplain: (explain) => set({ explain }),
   setShowState: (showState) => set({ showState }),
   setDemoStep: (demoStep) => set({ demoStep }),
+  setFocus: (focus) => set({ focus }),
 }));

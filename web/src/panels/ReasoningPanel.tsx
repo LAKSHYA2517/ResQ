@@ -4,6 +4,7 @@ import { Empty, Section } from "../components/ui";
 import { cellsIn } from "../lib/cells";
 import { useSim, useView } from "../store/sim";
 import { useUi } from "../store/ui";
+import { ProveIt } from "./ProveIt";
 
 function predicate(fact: string) {
   return fact.slice(0, fact.indexOf("("));
@@ -63,6 +64,8 @@ export function ReasoningPanel() {
           )}
         </Section>
       )}
+
+      <ProveIt />
 
       <Section
         title="World state (structured data)"

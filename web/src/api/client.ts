@@ -12,10 +12,26 @@ export type Session = S["SessionOut"];
 export type EventResult = S["EventOut"];
 export type EventTypeName = S["EventIn"]["type"];
 export type LogEntry = S["LogEntryOut"];
-export type Rule = components["schemas"]["RuleOut"];
-export type Compare = components["schemas"]["CompareOut"];
-export type SearchRun = components["schemas"]["SearchRunOut"];
-export type RunSpec = components["schemas"]["RunSpec"];
+export type Rule = S["RuleOut"];
+export type Compare = S["CompareOut"];
+export type SearchRun = S["SearchRunOut"];
+export type RunSpec = S["RunSpec"];
+export type AlgorithmName = RunSpec["algorithm"];
+export type HeuristicName = NonNullable<RunSpec["heuristic"]>;
+export type HeuristicCheck = S["HeuristicOut"];
+export type KbQuery = S["QueryOut"];
+export type ProofNode = S["ProofNodeOut"];
+export type Network = S["NetworkModel"];
+export type Inference = S["InferOut"];
+export type OrderReport = S["OrderOut"];
+export type Adversarial = S["AdversarialOut"];
+export type PlanCompare = S["PlanCompareOut"];
+export type Profile = S["ProfileOut"];
+export type Belief = S["BeliefOut"];
+export type FireMode = S["SessionOut"]["fire_mode"];
+
+/** Request bodies: the API fills in every default, so only `session_id` is required. */
+type In<K extends keyof S> = Partial<S[K]> & { session_id: string };
 
 export const API_URL: string = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 export const WS_URL = API_URL.replace(/^http/, "ws");
@@ -69,8 +85,8 @@ export const api = {
   scenario: (id: string) => request<S["ScenarioOut"]>(`/scenario/${id}`),
   validate: (scenario: Scenario) => post<Validation>("/scenario/validate", scenario),
   create: (scenario: Scenario) => post<S["ScenarioOut"]>("/scenario", scenario),
-  start: (scenario_id: string, seed?: number) =>
-    post<Session>("/simulation/start", { scenario_id, seed }),
+  start: (scenario_id: string, seed?: number, fire_mode?: FireMode) =>
+    post<Session>("/simulation/start", { scenario_id, seed, fire_mode }),
   step: (session_id: string) => post<Snapshot>("/simulation/step", { session_id }),
   reset: (session_id: string) => post<Snapshot>("/simulation/reset", { session_id }),
   event: (session_id: string, type: EventTypeName, args: Record<string, unknown>) =>
@@ -81,6 +97,15 @@ export const api = {
     request<Snapshot>(`/simulation/replay/${tick}${qs({ session_id })}`),
   log: (session_id: string) => request<LogEntry[]>(`/simulation/log${qs({ session_id })}`),
   rules: () => request<Rule[]>("/kb/rules"),
-  compare: (body: { session_id: string; tick?: number; target?: string; runs?: RunSpec[] }) =>
-    post<Compare>("/search/compare", body),
+  compare: (body: In<"CompareIn">) => post<Compare>("/search/compare", body),
+  heuristicCheck: (body: In<"HeuristicIn">) =>
+    post<HeuristicCheck>("/search/heuristic-check", body),
+  kbQuery: (session_id: string, goal: string, tick?: number) =>
+    post<KbQuery>("/kb/query", { session_id, goal, tick }),
+  network: (prior: number) => request<Network>(`/bayes/network${qs({ prior })}`),
+  infer: (body: Partial<S["InferIn"]>) => post<Inference>("/bayes/infer", body),
+  order: (body: In<"OrderIn">) => post<OrderReport>("/optimize/order", body),
+  adversarial: (body: In<"AdversarialIn">) => post<Adversarial>("/adversarial/move", body),
+  planCompare: (body: In<"PlanCompareIn">) => post<PlanCompare>("/plan/compare", body),
+  profile: (session_id: string) => request<Profile>(`/agent/profile${qs({ session_id })}`),
 };

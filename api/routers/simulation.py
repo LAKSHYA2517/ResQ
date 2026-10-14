@@ -36,11 +36,12 @@ router = APIRouter(prefix="/simulation", tags=["simulation"], responses={404: {"
 
 @router.post("/start")
 async def start(body: StartIn) -> SessionOut:
-    session = store.start(body.scenario_id, body.seed)
+    session = store.start(body.scenario_id, body.seed, body.fire_mode)
     return SessionOut(
         session_id=session.id,
         scenario_id=session.scenario_id,
         seed=session.sim.scenario.seed,
+        fire_mode=session.sim.scenario.params.fire_mode,  # type: ignore[arg-type]
         snapshot=snapshot_out(session.sim.head),
     )
 

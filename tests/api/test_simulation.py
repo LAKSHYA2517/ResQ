@@ -32,7 +32,7 @@ def test_start_returns_the_engines_first_snapshot(client: TestClient, start: Sta
     assert [s["status"] for s in snap["plan"]] == ["current", "pending", "pending", "pending"]
     assert snap["plan"][0]["label"] == "Travel(c4_4, c7_8)"
     assert snap["route"][0] == [4, 4] and snap["route"][-1] == [7, 8]
-    assert snap["priorities"][0]["breakdown"] == "p2: 5×4 + 3×4 − 1×13 = 19"
+    assert snap["priorities"][0]["breakdown"] == "p2: 5×5 + 3×4 − 1×13 = 24"
     assert snap["state"]["terrain"][0][5] == "wall" and snap["state"]["terrain"][0][9] == "exit"
     assert snap["state"]["hot"] and all(e["usable"] for e in snap["state"]["exits"])
     assert not any(f.startswith("Adjacent") for f in snap["facts"])

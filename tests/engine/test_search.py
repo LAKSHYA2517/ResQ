@@ -27,8 +27,8 @@ def route_problem(scenario: Scenario, start: Cell, goal: Cell) -> tuple[State, G
 
 
 def run(problem: GridProblem, algorithm: str, hname: str = "manhattan"):  # type: ignore[no-untyped-def]
-    h = make_heuristic(hname, problem) if algorithm == "astar" else None
-    return search(problem, algorithm, h)
+    informed = algorithm in ("astar", "greedy", "weighted_astar")
+    return search(problem, algorithm, make_heuristic(hname, problem) if informed else None)
 
 
 def path_cost(problem: GridProblem, path: tuple[Cell, ...]) -> float:
@@ -301,3 +301,144 @@ def test_prop_bfs_equals_ucs_when_all_costs_equal(route: tuple[Scenario, Cell, C
     uniform = replace(scenario, params=Params(cost_model=CostModel(1.0, 1.0, 1.0, 0.0)))
     _, problem = route_problem(uniform, start, goal)
     assert run(problem, "bfs")[0].cost == run(problem, "ucs")[0].cost
+
+
+# --- P4: DFS, DLS, IDDFS, greedy, weighted A* -----------------------------------------------------
+
+EVERY = ["bfs", "dfs", "dls", "iddfs", "ucs", "greedy", "astar", "weighted_astar"]
+COMPLETE = ["bfs", "dfs", "iddfs", "ucs", "greedy", "astar", "weighted_astar"]
+
+
+def test_all_eight_algorithms_share_one_interface(shipped: dict[str, Scenario]) -> None:
+    s = shipped["showcase"]
+    _, problem = route_problem(s, s.agent, s.people[1].pos)
+    for algorithm in EVERY:
+        result, trace = run(problem, algorithm)
+        assert result.algorithm == algorithm and result.found
+        assert result.path[0] == s.agent and result.path[-1] == s.people[1].pos
+        assert path_cost(problem, result.path) == result.cost
+        assert sum(isinstance(t, NodeExpanded) for t in trace) == result.expanded
+        assert isinstance(trace[-1], PathFound)
+
+
+def test_dfs_and_greedy_are_honestly_non_optimal(make_scenario: Callable[..., Scenario]) -> None:
+    # Open grid, goal straight below the start: DFS dives straight down through the rubble
+    # (first legal move in up/down/left/right order); greedy walks straight through it too,
+    # because it only looks at h.
+    s = make_scenario(
+        grid_size=[7, 7],
+        terrain=[".......", "...r...", "...r...", "...r...", "...r...", ".......", "......."],
+        agent=[0, 3],
+        people=[{"id": "p1", "pos": [6, 3]}],
+        exits=[{"id": "e1", "pos": [6, 6]}],
+    )
+    _, problem = route_problem(s, (0, 3), (6, 3))
+    rows = {r.label: r.result for r in compare(problem, [(a, None) for a in EVERY], limit=30)}
+    best = rows["ucs"].cost
+    assert best == 8  # two steps sideways to walk round four rubble cells (4 * 3 = 12 saved)
+    assert rows["astar+manhattan"].cost == best and rows["astar+manhattan"].optimal_vs_ucs
+    assert (rows["greedy+manhattan"].cost or 0) > (best or 0)
+    assert rows["greedy+manhattan"].optimal_vs_ucs is False
+    assert rows["greedy+manhattan"].expanded < rows["ucs"].expanded  # but it is fast
+    assert (rows["dfs"].cost or 0) > (best or 0) and rows["dfs"].optimal_vs_ucs is False
+    assert rows["bfs"].cost == 14 and rows["bfs"].optimal_vs_ucs is False  # fewest steps, dearer
+
+
+def test_iddfs_finds_fewest_steps_like_bfs_and_repeats_work(shipped: dict[str, Scenario]) -> None:
+    s = shipped["showcase"]
+    _, problem = route_problem(s, s.agent, s.people[1].pos)
+    b, _ = run(problem, "bfs")
+    i, _ = run(problem, "iddfs")
+    assert len(i.actions) == len(b.actions)
+    assert i.depth_limit == len(i.actions)  # stopped at the first limit that reaches the goal
+    assert i.expanded > b.expanded  # every shallower pass was redone
+
+
+def test_dls_reports_cutoff_separately_from_no_route(shipped: dict[str, Scenario]) -> None:
+    s = shipped["basic_rescue"]
+    _, problem = route_problem(s, s.agent, s.people[0].pos)  # 10 steps away
+    short, trace = search(problem, "dls", limit=5)
+    assert not short.found and short.reason == "cutoff: no goal within depth limit 5"
+    assert short.depth_limit == 5 and isinstance(trace[-1], SearchFailed)
+    enough, _ = search(problem, "dls", limit=10)
+    assert enough.found and len(enough.actions) <= 10
+    blocked = shipped["impossible"]
+    _, sealed = route_problem(blocked, blocked.agent, blocked.people[0].pos)
+    none, _ = search(sealed, "dls", limit=200)
+    assert none.reason == "search space exhausted: no route to any goal"
+    deep, _ = search(sealed, "iddfs")
+    assert not deep.found and deep.reason.startswith("search space exhausted")
+    assert not search(sealed, "dfs")[0].found
+
+
+def test_weighted_astar_trades_cost_for_speed_within_its_bound(
+    make_scenario: Callable[..., Scenario],
+) -> None:
+    terrain = [
+        "".join("r" if (r * 5 + c * 3) % 4 == 0 else "." for c in range(20)) for r in range(20)
+    ]
+    s = make_scenario(
+        grid_size=[20, 20],
+        terrain=terrain,
+        agent=[0, 1],
+        people=[{"id": "p1", "pos": [19, 18]}],
+        exits=[{"id": "e1", "pos": [19, 19]}],
+    )
+    _, problem = route_problem(s, (0, 1), (19, 18))
+    h = make_heuristic("manhattan", problem)
+    exact, _ = search(problem, "astar", h)
+    for w in (1.0, 1.5, 3.0):
+        r, _ = search(problem, "weighted_astar", h, w=w)
+        assert (exact.cost or 0) <= (r.cost or 0) <= w * (exact.cost or 0) + 1e-9
+    fast, _ = search(problem, "weighted_astar", h, w=3.0)
+    assert fast.expanded < exact.expanded
+    assert search(problem, "weighted_astar", h, w=1.0)[0].cost == exact.cost
+
+
+def test_informed_algorithms_need_a_heuristic(make_scenario: Callable[..., Scenario]) -> None:
+    _, problem = route_problem(make_scenario(), (0, 0), (4, 4))
+    for algorithm in ("greedy", "weighted_astar"):
+        with pytest.raises(ValueError, match="needs a heuristic"):
+            search(problem, algorithm)
+
+
+def test_compare_labels_and_defaults(make_scenario: Callable[..., Scenario]) -> None:
+    _, problem = route_problem(make_scenario(), (0, 0), (4, 4))
+    runs = compare(
+        problem,
+        [("dls", None), ("greedy", None), ("weighted_astar", "euclidean"), ("dfs", "zero")],
+        limit=3,
+        w=1.5,
+    )
+    assert [r.label for r in runs] == [
+        "dls(limit=3)",
+        "greedy+manhattan",
+        "weighted_astar(w=1.5)+euclidean",
+        "dfs",
+    ]
+    assert runs[0].result.found is False and runs[0].result.optimal_vs_ucs is False
+    assert runs[3].heuristic is None  # uninformed algorithms ignore a heuristic
+
+
+@settings(max_examples=150, deadline=None)
+@given(routes())
+def test_prop_every_algorithm_returns_real_paths(route: tuple[Scenario, Cell, Cell]) -> None:
+    scenario, start, goal = route
+    state, problem = route_problem(scenario, start, goal)
+    best, _ = run(problem, "ucs")
+    fewest, _ = run(problem, "bfs")
+    for algorithm in EVERY:
+        r, _ = search(
+            problem,
+            algorithm,
+            make_heuristic("manhattan", problem),
+            **({"limit": 100} if algorithm == "dls" else {}),
+        )
+        assert r.found == best.found, algorithm  # limit 100 exceeds any path in a 9x9 grid
+        assert all(not state.is_blocked(c) for c in r.path[1:])
+        if r.found:
+            assert math.isclose(path_cost(problem, r.path), r.cost or 0), algorithm
+            assert (r.cost or 0) >= (best.cost or 0) - 1e-9
+            assert len(r.actions) >= len(fewest.actions)
+            assert len(set(r.path)) == len(r.path)  # no cell visited twice
+    assert len(run(problem, "iddfs")[0].actions) == len(fewest.actions)

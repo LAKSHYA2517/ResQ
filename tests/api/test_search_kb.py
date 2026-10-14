@@ -90,5 +90,5 @@ def test_search_compare_errors(client: TestClient, start: Start) -> None:
     )
     assert client.post("/search/compare", json={"session_id": sid, "tick": 9}).status_code == 404
     assert client.post("/search/compare", json={"session_id": "nope"}).status_code == 404
-    bad = {"session_id": sid, "runs": [{"algorithm": "dfs"}]}
+    bad = {"session_id": sid, "runs": [{"algorithm": "dijkstra"}]}
     assert client.post("/search/compare", json=bad).status_code == 422

@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from fastapi import HTTPException
 
-from resq.agent.loop import Simulation
+from resq.agent.loop import Simulation, Snapshot
 from resq.world.scenarios import Scenario, load_all
 
 DEFAULT_SPEED = 4.0  # ticks per second
@@ -38,10 +38,12 @@ class Store:
         self.custom[scenario_id] = scenario
         return scenario_id
 
-    def start(self, scenario_id: str, seed: int | None) -> Session:
+    def start(self, scenario_id: str, seed: int | None, fire_mode: str | None = None) -> Session:
         scenario = self.scenario(scenario_id)
         if seed is not None:
             scenario = replace(scenario, seed=seed)
+        if fire_mode is not None:
+            scenario = replace(scenario, params=replace(scenario.params, fire_mode=fire_mode))
         session = Session(uuid4().hex[:12], scenario_id, Simulation(scenario))
         self.sessions[session.id] = session
         return session
@@ -54,3 +56,13 @@ class Store:
 
 
 store = Store()
+
+
+def snapshot_at(session_id: str, tick: int | None) -> tuple[Session, Snapshot]:
+    """The session and its snapshot at ``tick`` (default: the live tick); 404 if out of range."""
+    session = store.session(session_id)
+    head = session.sim.head.tick
+    t = head if tick is None else tick
+    if not 0 <= t <= head:
+        raise HTTPException(404, f"tick {t} is outside 0..{head}")
+    return session, session.sim.history[t]

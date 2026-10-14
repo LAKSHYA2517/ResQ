@@ -67,9 +67,24 @@ export const STEPS: DemoStep[] = [
     },
   },
   {
+    title: "Prove it",
+    caption:
+      "The same question asked three independent ways: is AtRisk(P) in the forward-chained fixpoint, can backward chaining build a proof tree from base facts, and (for a ground goal) does resolution reach the empty clause? They must agree.",
+    panel: "reasoning",
+    run: async () => {
+      const target = sim().head?.target ?? "p2";
+      ui().setFocus(`prove:AtRisk(${target})`);
+    },
+  },
+  {
     title: "Bayesian sensor network",
-    caption: "Posterior risk per person from smoke and heat sensors, exact vs sampling.",
-    later: "Phase 4",
+    caption:
+      "Each person's zone has smoke, heat and voice sensors. Exact inference gives P(Trapped | readings), and Risk = round(5 × that). The lab runs enumeration, variable elimination and three samplers, and plots the sampling error shrinking towards the exact answer.",
+    panel: "uncertainty",
+    run: async () => {
+      sim().setHighlight([]);
+      ui().setFocus("infer");
+    },
   },
   {
     title: "Priority scores",
@@ -84,41 +99,28 @@ export const STEPS: DemoStep[] = [
     },
   },
   {
-    title: "Search comparison",
+    title: "Algorithm race",
     caption:
-      "BFS, UCS and A* on the same target with measured nodes expanded. UCS and A* agree on cost; BFS ignores terrain costs. Click a row to see the cells each one explored. DFS, DLS, IDDFS and Greedy arrive in Phase 4.",
+      "BFS, DFS, UCS, Greedy and A* on the same target, replaying their real expansion order at the same pace. UCS and A* agree on cost; A* expands far fewer cells; DFS is not optimal, and Greedy only sometimes is. Every counter is measured. Close the race to continue.",
     panel: "search",
-    run: async () => {
-      const { sessionId, head } = sim();
-      if (!sessionId || !head) return;
-      const result = await api.compare({
-        session_id: sessionId,
-        tick: head.tick,
-        runs: [
-          { algorithm: "bfs" },
-          { algorithm: "ucs" },
-          { algorithm: "astar", heuristic: "manhattan" },
-        ],
-      });
-      ui().setCompare(result);
-      const a = result.runs.find((r) => r.label === "astar+manhattan");
-      if (a) ui().setOverlay({ label: a.label, explored: a.expansion_order, path: a.path });
-    },
+    run: async () => ui().setFocus("race"),
   },
   {
     title: "Rescue-order optimizer",
     caption:
-      "Greedy vs hill climbing vs simulated annealing vs genetic algorithm vs the exhaustive optimum.",
-    later: "Phase 4",
+      "In which order should everyone be rescued? Hill climbing, simulated annealing and a genetic algorithm against greedy-by-priority, with the exhaustive optimum as the reference line. (Load Mass Evacuation for seven people and 5040 orders.)",
+    panel: "optimize",
+    run: async () => ui().setFocus("order"),
   },
   {
     title: "Plan",
     caption:
-      "A STRIPS plan found by forward state-space A*: Travel, PickUp, Travel, DropOff, with each Travel costed by A*. The regression planner and HTN tree arrive in Phases 4 and 5.",
+      "A STRIPS plan: Travel, PickUp, Travel, DropOff, each Travel costed by A*. Forward search (from the state) and regression (from the goal) are run on the same problem and must find the same cost. The HTN tree arrives in Phase 5.",
     panel: "planning",
     run: async () => {
       ui().setOverlay(null);
       sim().setHighlight([]);
+      ui().setFocus("planners");
     },
   },
   {
@@ -148,8 +150,15 @@ export const STEPS: DemoStep[] = [
   {
     title: "Fact diff and the replan",
     caption:
-      "The knowledge base diff is shown on the Reasoning tab; the Planning tab shows the invalidated plan, the reason and the new plan. Adversarial fire with alpha-beta arrives in Phase 4.",
+      "The knowledge base diff is on the Logic tab; the Plan tab shows the invalidated plan, the reason and the new plan.",
     panel: "planning",
+  },
+  {
+    title: "Adversarial fire",
+    caption:
+      "Now treat the fire as an opponent. Minimax and alpha-beta search the same game tree from the agent's position: same best step and value, far fewer nodes with pruning.",
+    panel: "optimize",
+    run: async () => ui().setFocus("adversarial"),
   },
   {
     title: "Final outcome",

@@ -8,17 +8,27 @@ Everything printed is read from engine objects; nothing here computes a result o
 import argparse
 import sys
 from collections import Counter
+from random import Random
 
 from resq.agent.loop import Simulation, Snapshot, replay
+from resq.decision.ordering import build_order_problem, optimise
+from resq.logic.backward import prove
+from resq.logic.forward import forward_chain
+from resq.logic.resolution import refute
 from resq.logic.rules import CORE_RULES, GEOMETRY_PREDICATES
+from resq.logic.terms import atom
 from resq.planning.domain import build_domain
 from resq.planning.fwd_planner import plan
-from resq.search import compare
+from resq.planning.regression import one_place_one_load, plan_backward
+from resq.search import ALGORITHMS, compare
+from resq.search.adversarial import FireGame, alphabeta, minimax
 from resq.search.router import Router
 from resq.trace import ActionExecuted, PersonStatusChanged
+from resq.uncertainty.models import sensor_network
+from resq.uncertainty.sampling import likelihood_weighting
 from resq.world.events import EventType
 from resq.world.scenarios import load_all
-from resq.world.state import State, Status
+from resq.world.state import Exit, State, Status
 from resq.world.terrain import Terrain
 
 GLYPH = {Terrain.FLOOR: ".", Terrain.RUBBLE: "r", Terrain.WALL: "#", Terrain.EXIT: "E"}
@@ -60,6 +70,56 @@ def show_plan(snapshot: Snapshot) -> None:
     for i, step in enumerate(snapshot.memory.steps):
         mark = ">" if i == snapshot.memory.cursor else " "
         print(f"   {mark} {step.action.label:<24} cost {step.action.cost:g}")
+
+
+def extras(sim: Simulation, router: Router, usable: list[Exit]) -> None:
+    """The syllabus extensions on the same first tick: logic proofs, Bayes, local and
+    adversarial search."""
+    head, scenario = sim.head, sim.scenario
+    target = head.target or ""
+
+    print("\n    -- Prove it: one goal, three methods --")
+    goal = atom("RescueNow", target)
+    kb, _ = forward_chain(CORE_RULES, head.base_facts)
+    proofs, steps = prove(CORE_RULES, head.base_facts, goal)
+    refutation, _ = refute(CORE_RULES, head.base_facts, goal)
+    print(
+        f"    {goal}: forward {kb.holds(goal)}, backward {bool(proofs)} ({len(steps)} goals tried),"
+        f" resolution {refutation.entailed} ({len(refutation.steps)} clauses to the empty clause)"
+    )
+    for step in refutation.steps:
+        print(f"        {step.clause}")
+
+    print("\n    -- Bayesian sensor network: Risk = round(5 x P(Trapped | sensors)) --")
+    for b in head.beliefs:
+        seen = " ".join(f"{k}={'T' if v else 'F'}" for k, v in b.evidence)
+        bn = sensor_network(b.prior_fire)
+        lw, _ = likelihood_weighting(bn, "Trapped", dict(b.evidence), 5000, Random(scenario.seed))
+        print(
+            f"    {b.person_id}: prior {b.prior_fire:.2f}  {seen}  exact {b.p_trapped:.3f}"
+            f"  likelihood weighting {lw.p_true:.3f}  -> risk {b.risk}"
+        )
+
+    print("\n    -- Rescue-order optimizer (sum of weight x completion time) --")
+    w = scenario.params.weights
+    weights = {b.person_id: w.w_r * b.risk for b in head.beliefs}
+    for p in head.state.people:
+        weights[p.id] = weights.get(p.id, 0.0) + w.w_u * p.urgency
+    report, _ = optimise(build_order_problem(head.state, router, weights, usable), scenario.seed)
+    for row in report.rows:
+        gap = "" if row.gap is None else f"  gap {row.gap:g}"
+        print(f"    {row.method:<20} cost {row.cost:<8g}{gap:<10} {' -> '.join(row.order)}")
+
+    if len(head.route) > 1:
+        print("\n    -- Adversarial fire: minimax vs alpha-beta, depth 4 --")
+        costs = scenario.params.cost_model
+        full, _ = minimax((g := FireGame(head.state, head.route[-1], costs)), g.root(), 4)
+        pruned, _ = alphabeta((g := FireGame(head.state, head.route[-1], costs)), g.root(), 4)
+        print(
+            f"    minimax: step {full.move}, value {full.value:g}, {full.nodes} nodes;"
+            f" alpha-beta: step {pruned.move}, value {pruned.value:g}, {pruned.nodes} nodes"
+            f" (same move: {full.move == pruned.move})"
+        )
 
 
 def main() -> int:
@@ -111,13 +171,13 @@ def main() -> int:
             head.state.agent.pos, {head.state.person(head.target).pos}
         )
         print(
-            f"    {'algorithm':<18}{'cost':>6}{'steps':>7}{'expanded':>10}{'generated':>11}"
+            f"    {'algorithm':<32}{'cost':>6}{'steps':>7}{'expanded':>10}{'generated':>11}"
             f"{'max frontier':>14}  optimal"
         )
-        for run in compare(problem, [("bfs", None), ("ucs", None), ("astar", "manhattan")]):
+        for run in compare(problem, [(a, None) for a in ALGORITHMS]):
             r = run.result
             print(
-                f"    {run.label:<18}{r.cost or 0:>6g}{len(r.actions):>7}{r.expanded:>10}"
+                f"    {run.label:<32}{r.cost or 0:>6g}{len(r.actions):>7}{r.expanded:>10}"
                 f"{r.generated:>11}{r.max_frontier:>14}  {r.optimal_vs_ucs}"
             )
 
@@ -131,6 +191,12 @@ def main() -> int:
             f"    cost {informed.cost:g}; states expanded: {informed.expanded} with the heuristic,"
             f" {blind.expanded} without (same cost: {informed.cost == blind.cost})"
         )
+        backward, _ = plan_backward(domain.problem, one_place_one_load)
+        print(
+            f"    regression planner: cost {backward.cost:g}, {backward.expanded} goal sets"
+            f" expanded (equal to forward: {backward.cost == informed.cost})"
+        )
+        extras(sim, router, usable)
 
     heading(7, "Execution (one primitive action per tick), events and replanning")
     while not sim.head.finished and sim.head.tick < 300:

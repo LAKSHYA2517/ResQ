@@ -43,6 +43,7 @@ class SearchResult[S]:
     frontier_snapshots: tuple[tuple[S, ...], ...]
     optimal_vs_ucs: bool | None = None  # filled by compare(); None = not checked
     reason: str = ""  # why the search failed
+    depth_limit: int | None = None  # DLS: the limit; IDDFS: the last limit tried
 
 
 class FrontierSnapshots[S]:

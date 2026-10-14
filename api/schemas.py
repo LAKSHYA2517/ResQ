@@ -65,10 +65,17 @@ class CostModelModel(BaseModel):
     dropoff: float
 
 
+FireMode = Literal["stochastic", "adversarial"]
+
+
 class ParamsModel(BaseModel):
     p_spread: float
     weights: WeightsModel
     cost_model: CostModelModel
+    sensor_noise: float = 0.0
+    fire_mode: FireMode = "stochastic"
+    adversary_depth: int = 3
+    adversary_k: int = 1
 
 
 class ScenarioModel(BaseModel):
@@ -185,6 +192,17 @@ class DerivationOut(BaseModel):
     iteration: int
 
 
+class BeliefOut(BaseModel):
+    """One person's zone: sensor readings and the exact posterior behind Risk(P)."""
+
+    person_id: str
+    prior_fire: float
+    evidence: dict[str, bool]
+    p_fire: float
+    p_trapped: float
+    risk: int
+
+
 class PriorityOut(BaseModel):
     person_id: str
     risk: float
@@ -239,6 +257,7 @@ class SnapshotOut(BaseModel):
     facts: list[str]  # base facts, minus static grid geometry (see fact_counts)
     fact_counts: dict[str, int]  # every predicate, base and derived, including geometry
     derived: list[DerivationOut]
+    beliefs: list[BeliefOut]
     priorities: list[PriorityOut]
     target: str | None
     plan: list[PlanStepOut]
@@ -298,6 +317,17 @@ def snapshot_out(snap: Snapshot) -> SnapshotOut:
             )
             for d in snap.derived
         ],
+        beliefs=[
+            BeliefOut(
+                person_id=b.person_id,
+                prior_fire=b.prior_fire,
+                evidence=dict(b.evidence),
+                p_fire=b.p_fire,
+                p_trapped=b.p_trapped,
+                risk=b.risk,
+            )
+            for b in snap.beliefs
+        ],
         priorities=[PriorityOut(**vars(p)) for p in snap.priorities],
         target=snap.target,
         plan=[
@@ -338,6 +368,7 @@ def snapshot_out(snap: Snapshot) -> SnapshotOut:
 class StartIn(BaseModel):
     scenario_id: str
     seed: int | None = None  # overrides the scenario's seed for this session
+    fire_mode: FireMode | None = None  # "adversarial" = the fire plays its worst case
 
 
 class SessionIn(BaseModel):
@@ -354,6 +385,7 @@ class SessionOut(BaseModel):
     session_id: str
     scenario_id: str
     seed: int
+    fire_mode: FireMode
     snapshot: SnapshotOut
 
 
