@@ -28,6 +28,7 @@ export function Benchmark() {
   const scenarios = out ? [...new Set(out.rows.map((r) => r.scenario))] : [];
   return (
     <Section
+      help="Reflex (percept → action, no map), goal-based (A* to the nearest person) and the full utility-based agent on every predefined scenario plus 20 seeded random ones. The utility agent goes for the person most at risk first, which can cost more path than taking the nearest: a higher cost beside more rescues is that trade-off."
       title="Agent-type benchmark"
       right={
         <Btn tone="primary" disabled={run.isPending} onClick={() => run.mutate()}>
@@ -35,10 +36,6 @@ export function Benchmark() {
         </Btn>
       }
     >
-      <p className="text-sm text-dim">
-        Reflex (percept → action, no map), goal-based (A* to the nearest person) and the full
-        utility-based agent on every predefined scenario plus 20 seeded random ones.
-      </p>
       {run.isError && <p className="mt-2 text-sm text-bad">{run.error.message}</p>}
       {out && (
         <div className="mt-3">
@@ -98,10 +95,6 @@ export function Benchmark() {
               </tbody>
             </table>
           </details>
-          <p className="mt-2 text-xs text-dim">
-            The utility agent goes for the person most at risk first, which can cost more path than
-            taking the nearest: a higher cost beside more rescues is that trade-off.
-          </p>
         </div>
       )}
     </Section>

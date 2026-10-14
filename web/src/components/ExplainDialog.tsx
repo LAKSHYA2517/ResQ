@@ -56,15 +56,13 @@ export function ExplainDialog() {
 
           {explain === "decision" && (
             <>
-              <h4 className="mb-1 text-xs font-semibold uppercase tracking-wider text-dim">
-                Priority scores
-              </h4>
+              <h4 className="mb-1 text-[13px] font-semibold text-ink">Priority scores</h4>
               <ul className="mb-4 space-y-1 font-mono text-xs">
                 {view.priorities.map((p) => (
                   <li key={p.person_id}>{p.breakdown}</li>
                 ))}
               </ul>
-              <h4 className="mb-1 text-xs font-semibold uppercase tracking-wider text-dim">
+              <h4 className="mb-1 text-[13px] font-semibold text-ink">
                 Facts the knowledge base derived about {view.target ?? "the target"}
               </h4>
               {provenance.length === 0 ? (
@@ -108,9 +106,7 @@ export function ExplainDialog() {
             </div>
           )}
 
-          <h4 className="mb-1 text-xs font-semibold uppercase tracking-wider text-dim">
-            Engine trace
-          </h4>
+          <h4 className="mb-1 text-[13px] font-semibold text-ink">Engine trace</h4>
           {trace.length === 0 ? (
             <p className="text-sm text-dim">
               The agent did not search or decide anything this tick.

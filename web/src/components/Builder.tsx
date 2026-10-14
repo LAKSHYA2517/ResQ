@@ -1,4 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
+import {
+  Bot,
+  BrickWall,
+  DoorOpen,
+  Eraser,
+  Flame,
+  Grip,
+  type LucideIcon,
+  MousePointer2,
+  Redo2,
+  Square,
+  Undo2,
+  User,
+} from "lucide-react";
 import { useEffect } from "react";
 import { api } from "../api/client";
 import { MAX_SIDE, MIN_SIDE, type Tool } from "../lib/draft";
@@ -7,16 +21,16 @@ import { useSim } from "../store/sim";
 import { useUi } from "../store/ui";
 import { Btn, Chip, Section } from "./ui";
 
-const TOOLS: { id: Tool; label: string; glyph: string }[] = [
-  { id: "select", label: "Select", glyph: "⌖" },
-  { id: "floor", label: "Floor", glyph: "·" },
-  { id: "rubble", label: "Rubble", glyph: "▨" },
-  { id: "wall", label: "Wall", glyph: "▦" },
-  { id: "fire", label: "Fire", glyph: "♨" },
-  { id: "person", label: "Person", glyph: "☺" },
-  { id: "exit", label: "Exit", glyph: "⇥" },
-  { id: "agent", label: "Agent", glyph: "◈" },
-  { id: "erase", label: "Erase", glyph: "✕" },
+const TOOLS: { id: Tool; label: string; icon: LucideIcon }[] = [
+  { id: "select", label: "Select", icon: MousePointer2 },
+  { id: "floor", label: "Floor", icon: Square },
+  { id: "rubble", label: "Rubble", icon: Grip },
+  { id: "wall", label: "Wall", icon: BrickWall },
+  { id: "fire", label: "Fire", icon: Flame },
+  { id: "person", label: "Person", icon: User },
+  { id: "exit", label: "Exit", icon: DoorOpen },
+  { id: "agent", label: "Agent", icon: Bot },
+  { id: "erase", label: "Erase", icon: Eraser },
 ];
 
 const num = (v: string, lo: number, hi: number, fallback: number) => {
@@ -84,11 +98,11 @@ export function Builder() {
           title="Paint"
           right={
             <div className="flex gap-1">
-              <Btn aria-label="Undo" disabled={!b.past.length} onClick={b.undo}>
-                ↶
+              <Btn tone="ghost" aria-label="Undo" disabled={!b.past.length} onClick={b.undo}>
+                <Undo2 size={15} />
               </Btn>
-              <Btn aria-label="Redo" disabled={!b.future.length} onClick={b.redo}>
-                ↷
+              <Btn tone="ghost" aria-label="Redo" disabled={!b.future.length} onClick={b.redo}>
+                <Redo2 size={15} />
               </Btn>
             </div>
           }
@@ -100,18 +114,17 @@ export function Builder() {
                 type="button"
                 aria-pressed={b.tool === t.id}
                 onClick={() => b.setTool(t.id)}
-                className={`rounded-md border px-1 py-1.5 text-xs ${
+                className={`flex flex-col items-center gap-1 rounded-md border py-2 text-xs ${
                   b.tool === t.id
-                    ? "border-accent bg-accent/15 text-accent"
-                    : "border-line bg-raised"
+                    ? "border-accent bg-accent/10 text-accent"
+                    : "border-line bg-panel hover:bg-raised"
                 }`}
               >
-                <span className="mr-1 text-base">{t.glyph}</span>
+                <t.icon size={16} strokeWidth={1.75} />
                 {t.label}
               </button>
             ))}
           </div>
-          <p className="mt-2 text-xs text-dim">Drag on the grid to paint terrain, fire or erase.</p>
         </Section>
 
         <Section title="Scenario">

@@ -45,11 +45,10 @@ function OrderOptimizer() {
   const out = run.data?.tick === view?.tick ? run.data : undefined;
   const curves = out?.rows.filter((r) => r.curve.length > 1) ?? [];
   return (
-    <Section title="Rescue-order optimizer (local search)">
-      <p className="mb-2 text-sm text-dim">
-        Minimise Σ weight × completion time over the order of rescues, where weight = w_r·Risk +
-        w_u·Urgency and every leg is a real A* cost.
-      </p>
+    <Section
+      help="Minimise Σ weight × completion time over the order of rescues, where weight = w_r·Risk + w_u·Urgency and every leg is a real A* cost."
+      title="Rescue-order optimizer (local search)"
+    >
       <div className="flex items-end gap-2 text-xs text-dim">
         <label className="w-16">
           Seed
@@ -181,6 +180,7 @@ function Adversarial() {
   const adversarial = fireMode === "adversarial";
   return (
     <Section
+      help="A two-player zero-sum game: the agent (MIN) wants to finish its current leg cheaply, the fire (MAX) ignites cells to make that as costly as possible. In worst-case mode, for the whole run, the fire stops spreading at random and instead lights the cell alpha-beta picks against the agent each tick. Switching restarts the scenario."
       title="Adversarial fire (minimax, alpha-beta)"
       right={
         <Chip tone={adversarial ? "bad" : "default"}>
@@ -188,10 +188,6 @@ function Adversarial() {
         </Chip>
       }
     >
-      <p className="mb-2 text-sm text-dim">
-        A two-player zero-sum game: the agent (MIN) wants to finish its current leg cheaply, the
-        fire (MAX) ignites cells to make that as costly as possible.
-      </p>
       <div className="flex items-end gap-2 text-xs text-dim">
         <label className="flex-1">
           Depth (plies)
@@ -268,11 +264,6 @@ function Adversarial() {
         </div>
       )}
       <div className="mt-3 border-t border-line pt-3">
-        <p className="mb-2 text-xs text-dim">
-          Mode for the whole run: in worst-case mode the fire stops spreading at random and instead
-          lights the cell alpha-beta picks against the agent each tick. Switching restarts the
-          scenario.
-        </p>
         <Btn
           tone={adversarial ? "default" : "danger"}
           disabled={busy || !scenarioId}

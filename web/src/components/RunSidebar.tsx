@@ -1,25 +1,20 @@
+import { Pencil } from "lucide-react";
 import { api } from "../api/client";
 import { useBuilder } from "../store/builder";
 import { useSim, useView } from "../store/sim";
 import { useUi } from "../store/ui";
-import { Btn, Chip, fmt, Section } from "./ui";
+import { EventLog } from "./Controls";
+import { Btn, fmt, Section, Status } from "./ui";
 
-function Row({ k, v }: { k: string; v: string | number }) {
-  return (
-    <div className="flex justify-between gap-2 py-0.5">
-      <dt className="text-dim">{k}</dt>
-      <dd className="tabular-nums">{v}</dd>
-    </div>
-  );
-}
+const PERSON_TONE = { EVACUATED: "go", TRAPPED: "bad", CARRIED: "accent", WAITING: "dim" } as const;
 
+/** Run mode, left column: who is where, which exits work, and what happened. */
 export function RunSidebar() {
   const view = useView();
   const scenarioId = useSim((s) => s.scenarioId);
   const setMode = useUi((s) => s.setMode);
   const load = useBuilder((s) => s.load);
   if (!view) return null;
-  const m = view.metrics;
 
   const edit = async () => {
     if (scenarioId) load((await api.scenario(scenarioId)).scenario);
@@ -27,70 +22,81 @@ export function RunSidebar() {
   };
 
   return (
-    <div className="h-full overflow-y-auto">
-      <Section title="Mission" right={<Btn onClick={() => void edit()}>Edit scenario</Btn>}>
-        <div className="mb-2 flex flex-wrap gap-1.5">
-          <Chip
-            tone={view.status === "complete" ? "go" : view.status === "stuck" ? "warn" : "accent"}
-          >
-            {view.status}
-          </Chip>
-          <Chip>target {view.target ?? "none"}</Chip>
-        </div>
-        <h4 className="mt-3 text-xs text-dim">People</h4>
-        <ul className="mt-1 space-y-1 text-sm">
+    <div className="flex h-full flex-col">
+      <Section
+        title="People"
+        right={
+          <Btn tone="ghost" onClick={() => void edit()}>
+            <Pencil size={14} /> Edit scenario
+          </Btn>
+        }
+      >
+        <ul className="space-y-1">
           {view.state.people.map((p) => (
-            <li key={p.id} className="flex items-center justify-between">
+            <li key={p.id} className="flex items-center justify-between gap-2">
               <span>
                 <span className="font-semibold">{p.id}</span>{" "}
-                <span className="text-dim">
-                  risk {p.risk} · urg {p.urgency}
+                <span className="text-xs text-dim">
+                  risk {p.risk} · urgency {p.urgency}
                 </span>
               </span>
-              <Chip
-                tone={p.status === "EVACUATED" ? "go" : p.status === "TRAPPED" ? "bad" : "accent"}
-              >
-                {p.status.toLowerCase()}
-              </Chip>
+              <Status tone={PERSON_TONE[p.status]}>{p.status.toLowerCase()}</Status>
             </li>
           ))}
         </ul>
-        <h4 className="mt-3 text-xs text-dim">Exits</h4>
-        <ul className="mt-1 space-y-1 text-sm">
+      </Section>
+      <Section title="Exits">
+        <ul className="space-y-1">
           {view.state.exits.map((e) => (
             <li key={e.id} className="flex items-center justify-between">
               <span className="font-semibold">{e.id}</span>
-              <Chip tone={e.available && e.usable ? "go" : "bad"}>
+              <Status tone={e.available && e.usable ? "go" : "bad"}>
                 {!e.available ? "blocked" : e.usable ? "open" : "unusable"}
-              </Chip>
+              </Status>
             </li>
           ))}
         </ul>
       </Section>
-
-      <Section title="Measured by the engine">
+      <Section title="Run">
         <dl className="text-sm">
-          <Row k="Moves" v={m.moves} />
-          <Row k="Cost paid" v={fmt(m.path_cost)} />
-          <Row k="Plans / replans" v={`${m.plans} / ${m.replans}`} />
-          <Row k="A* runs" v={m.searches} />
-          <Row k="Cells expanded (A*)" v={m.nodes_expanded} />
-          <Row k="States expanded (planner)" v={m.plan_nodes_expanded} />
-          <Row k="KB facts (base / derived)" v={`${m.kb_base} / ${m.kb_derived}`} />
-          <Row k="Forward-chaining passes" v={m.kb_iterations} />
-          <Row k="Time this tick" v={`${fmt(m.timings_ms.total ?? 0, 2)} ms`} />
+          <Row k="Moves" v={view.metrics.moves} />
+          <Row k="Cost paid" v={fmt(view.metrics.path_cost)} />
+          <Row k="Plans / replans" v={`${view.metrics.plans} / ${view.metrics.replans}`} />
+          <Row k="A* runs" v={view.metrics.searches} />
         </dl>
       </Section>
-
-      <Section title="This tick">
-        <dl className="text-sm">
-          {Object.entries(m.timings_ms)
-            .filter(([k]) => k !== "total")
-            .map(([k, v]) => (
-              <Row key={k} k={k} v={`${fmt(v, 2)} ms`} />
-            ))}
-        </dl>
-      </Section>
+      <div className="min-h-0 flex-1">
+        <EventLog />
+      </div>
     </div>
+  );
+}
+
+function Row({ k, v }: { k: string; v: string | number }) {
+  return (
+    <div className="flex justify-between gap-2 py-0.5">
+      <dt className="text-dim">{k}</dt>
+      <dd className="font-mono text-[13px]">{v}</dd>
+    </div>
+  );
+}
+
+/** The rest of the engine counters for the viewed tick (the headline four are in the sidebar). */
+export function Metrics() {
+  const view = useView();
+  if (!view) return null;
+  const m = view.metrics;
+  return (
+    <Section title="Measured by the engine">
+      <dl className="text-sm">
+        <Row k="Cells expanded (A*)" v={m.nodes_expanded} />
+        <Row k="States expanded (planner)" v={m.plan_nodes_expanded} />
+        <Row k="KB facts (base / derived)" v={`${m.kb_base} / ${m.kb_derived}`} />
+        <Row k="Forward-chaining passes" v={m.kb_iterations} />
+        {Object.entries(m.timings_ms).map(([k, v]) => (
+          <Row key={k} k={k === "total" ? "Time this tick" : `  ${k}`} v={`${fmt(v, 2)} ms`} />
+        ))}
+      </dl>
+    </Section>
   );
 }

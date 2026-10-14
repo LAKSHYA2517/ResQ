@@ -125,7 +125,10 @@ export function ReasoningPanel() {
         </div>
       </Section>
 
-      <Section title={`Rules (${rules.data?.length ?? "…"})`}>
+      <Section
+        help="Closed world: anything not known or derivable is false. The number is how many facts the rule derived this tick."
+        title={`Rules (${rules.data?.length ?? "…"})`}
+      >
         {rules.isError && <p className="text-sm text-bad">Could not load rules.</p>}
         <ul className="space-y-1 font-mono text-xs">
           {rules.data?.map((r) => (
@@ -140,10 +143,6 @@ export function ReasoningPanel() {
             </li>
           ))}
         </ul>
-        <p className="mt-2 text-xs text-dim">
-          Closed world: anything not known or derivable is false. The number is how many facts the
-          rule derived this tick.
-        </p>
       </Section>
 
       <Section title={`Derived facts (${view.derived.length}) with provenance`}>

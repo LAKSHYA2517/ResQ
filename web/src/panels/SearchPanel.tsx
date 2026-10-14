@@ -94,8 +94,7 @@ export function SearchPanel() {
     <div className="h-full overflow-y-auto">
       <Section title="Compare algorithms on one problem">
         <p className="mb-2 text-sm text-dim">
-          Agent at ({view.state.agent.pos.join(", ")}) → a waiting person, tick {view.tick}. Every
-          number below is measured by the engine.
+          Agent at ({view.state.agent.pos.join(", ")}) → a waiting person, tick {view.tick}.
         </p>
         <label className="mb-2 block text-xs text-dim">
           Target
@@ -168,7 +167,7 @@ export function SearchPanel() {
             disabled={run.isPending || picked.length === 0 || none}
             onClick={() => run.mutate(true)}
           >
-            🏁 Race
+            Race
           </Btn>
         </div>
         {none && <p className="mt-2 text-sm text-dim">Nobody is waiting at this tick.</p>}
@@ -177,8 +176,9 @@ export function SearchPanel() {
 
       {result && (
         <Section
+          help='"vs UCS" compares each path cost with a reference uniform-cost run; it is computed, not assumed. Click a row to paint its explored cells and path on the grid (blue = expanded early, amber = late). IDDFS counts the repeated work of every pass.'
           title={`Results: ${result.target_id} at (${result.goal.join(", ")})`}
-          right={<Btn onClick={() => setRacing(true)}>🏁 Replay race</Btn>}
+          right={<Btn onClick={() => setRacing(true)}>Replay race</Btn>}
         >
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
@@ -245,19 +245,13 @@ export function SearchPanel() {
               </div>
             ))}
           </div>
-          <p className="mt-3 text-xs text-dim">
-            "vs UCS" compares each path cost with a reference uniform-cost run; it is computed, not
-            assumed. Click a row to paint its explored cells and path on the grid (blue = expanded
-            early, red = late). IDDFS counts the repeated work of every pass.
-          </p>
         </Section>
       )}
 
-      <Section title="Heuristic lab">
-        <p className="mb-2 text-sm text-dim">
-          Checks h(n) ≤ true cost (admissible) and h(n) ≤ c(n, n′) + h(n′) (consistent) on every
-          passable cell, then runs A* with it.
-        </p>
+      <Section
+        help="Checks h(n) ≤ true cost (admissible) and h(n) ≤ c(n, n′) + h(n′) (consistent) on every passable cell, then runs A* with it."
+        title="Heuristic lab"
+      >
         <div className="flex items-end gap-2">
           <label className="flex-1 text-xs text-dim">
             Heuristic (weight w = {w})

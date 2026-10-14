@@ -1,15 +1,16 @@
 import * as Tabs from "@radix-ui/react-tabs";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { Command, Download, Presentation } from "lucide-react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { api, type Cell } from "./api/client";
 import { Builder } from "./components/Builder";
 import { CommandPalette } from "./components/CommandPalette";
-import { Controls, EventLog } from "./components/Controls";
+import { Controls } from "./components/Controls";
 import { DemoBar } from "./components/DemoBar";
 import { ExplainDialog } from "./components/ExplainDialog";
 import { GridCanvas } from "./components/GridCanvas";
 import { RunSidebar } from "./components/RunSidebar";
-import { Btn, Chip } from "./components/ui";
+import { Btn, Status } from "./components/ui";
 import { goToStep } from "./demo";
 import { cellName, key } from "./lib/cells";
 import { draftToState } from "./lib/draft";
@@ -26,14 +27,22 @@ import { useBuilder } from "./store/builder";
 import { useSim, useView } from "./store/sim";
 import { type Tab, useUi } from "./store/ui";
 
-const TABS: [Tab, string][] = [
-  ["reasoning", "Logic"],
-  ["search", "Search"],
-  ["planning", "Plan"],
-  ["uncertainty", "Bayes"],
-  ["optimize", "Optimize"],
-  ["agent", "Agent"],
-  ["syllabus", "Syllabus"],
+const LEAVES: Record<Tab, [string, () => ReactNode]> = {
+  reasoning: ["Logic", () => <ReasoningPanel />],
+  uncertainty: ["Bayes", () => <UncertaintyPanel />],
+  search: ["Search", () => <SearchPanel />],
+  planning: ["Plan", () => <PlanningPanel />],
+  optimize: ["Optimize", () => <OptimizePanel />],
+  agent: ["Agent", () => <AgentPanel />],
+  syllabus: ["Syllabus", () => <SyllabusPanel />],
+};
+
+// Four top-level tabs; a group with several leaves shows them as sub-tabs.
+const GROUPS: [string, Tab[]][] = [
+  ["Reasoning", ["reasoning", "uncertainty"]],
+  ["Search", ["search"]],
+  ["Plan", ["planning"]],
+  ["Analysis", ["optimize", "agent", "syllabus"]],
 ];
 
 const reducedMotion =
@@ -165,19 +174,33 @@ export function App() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center gap-3 border-b border-line bg-panel px-4 py-2">
-        <h1 className="text-lg font-bold tracking-tight">
-          ResQ<span className="text-accent">-AI</span>
-        </h1>
-        <span className="hidden text-xs text-dim xl:inline">
-          classical-AI rescue agent · every number comes from the engine
-        </span>
+      <header className="flex h-12 items-center gap-4 border-b border-line bg-panel px-4">
+        <h1 className="text-[15px] font-semibold tracking-tight">ResQ</h1>
+        {running && view ? (
+          <div className="flex items-center gap-4 border-l border-line pl-4 text-sm">
+            <Status
+              tone={view.status === "complete" ? "go" : view.status === "stuck" ? "warn" : "accent"}
+            >
+              tick {view.tick} · {view.status}
+            </Status>
+            <span>
+              rescued {view.metrics.rescued}/{view.state.people.length}
+            </span>
+            <span className="text-dim">target {view.target ?? "none"}</span>
+          </div>
+        ) : (
+          <span className="border-l border-line pl-4 text-sm text-dim">
+            {builder.draft.name || "Untitled scenario"}
+          </span>
+        )}
         <div className="ml-auto flex items-center gap-2">
-          {apiDown ? (
-            <Chip tone="bad">engine API unreachable</Chip>
-          ) : (
-            <Chip tone="go">engine v{health.data?.version ?? "…"}</Chip>
-          )}
+          <span className="mr-2 text-xs text-dim">
+            {apiDown ? (
+              <Status tone="bad">engine API unreachable</Status>
+            ) : (
+              <Status tone="go">engine v{health.data?.version ?? "…"}</Status>
+            )}
+          </span>
           <div className="flex overflow-hidden rounded-md border border-line" role="tablist">
             {(["build", "run"] as const).map((m) => (
               <button
@@ -187,8 +210,8 @@ export function App() {
                 aria-selected={mode === m}
                 disabled={m === "run" && !sim.head}
                 onClick={() => setMode(m)}
-                className={`px-3 py-1.5 text-sm disabled:opacity-40 ${
-                  mode === m ? "bg-accent text-bg font-semibold" : "bg-raised"
+                className={`px-3 py-1 text-sm disabled:opacity-40 ${
+                  mode === m ? "bg-accent text-white font-medium" : "bg-panel"
                 }`}
               >
                 {m === "build" ? "Build" : "Run"}
@@ -197,6 +220,7 @@ export function App() {
           </div>
           {sim.sessionId && (
             <Btn
+              tone="ghost"
               title="Download the engine's report for this run (JSON and a printable page)"
               onClick={async () => {
                 try {
@@ -206,18 +230,23 @@ export function App() {
                 }
               }}
             >
-              ⤓ Report
+              <Download size={15} /> Report
             </Btn>
           )}
-          <Btn title="Command palette" onClick={() => useUi.getState().setPalette(true)}>
-            ⌘K
+          <Btn
+            tone="ghost"
+            title="Command palette (Ctrl/Cmd+K)"
+            aria-label="Command palette"
+            onClick={() => useUi.getState().setPalette(true)}
+          >
+            <Command size={15} />
           </Btn>
           <Btn
             tone={demoStep === null ? "default" : "primary"}
             disabled={apiDown || sim.busy}
             onClick={() => void goToStep(0, true)}
           >
-            ▶ Guided demo
+            <Presentation size={15} /> Guided demo
           </Btn>
         </div>
       </header>
@@ -233,13 +262,13 @@ export function App() {
         </div>
       )}
 
-      <div className="grid min-h-0 flex-1 grid-cols-[280px_minmax(0,1fr)_430px]">
+      <div className="grid min-h-0 flex-1 grid-cols-[272px_minmax(0,1fr)_440px]">
         <aside className="min-h-0 border-r border-line bg-panel" aria-label="Scenario">
           {running ? <RunSidebar /> : <Builder />}
         </aside>
 
-        <main className="relative flex min-h-0 min-w-0 flex-col bg-bg p-2">
-          <div className="relative min-h-0 flex-1">
+        <main className="relative flex min-h-0 min-w-0 flex-col bg-bg">
+          <div className="relative min-h-0 flex-1 p-3">
             {scene && (
               <GridCanvas
                 scene={scene}
@@ -258,7 +287,7 @@ export function App() {
               />
             )}
             {running && overlay && (
-              <div className="absolute top-1 left-1 rounded-md border border-accent bg-panel/90 px-2 py-1 text-xs">
+              <div className="absolute top-4 left-4 rounded-md border border-accent bg-panel px-2 py-1 text-xs shadow-sm">
                 Showing {overlay.label}: explored cells and path.{" "}
                 <button
                   type="button"
@@ -270,13 +299,14 @@ export function App() {
               </div>
             )}
             {running && hover && view && (
-              <div className="absolute right-1 bottom-1 rounded-md border border-line bg-panel/90 px-2 py-1 font-mono text-xs text-dim">
+              <div className="absolute right-4 bottom-4 rounded-md border border-line bg-panel px-2 py-1 font-mono text-xs text-dim">
                 ({hover[0]}, {hover[1]}) {cellName(hover)}
                 {view.state.hot.some((h) => key(h) === key(hover)) ? " · hot" : ""}
               </div>
             )}
           </div>
           <Legend running={running} />
+          {running && <Controls />}
         </main>
 
         <aside
@@ -284,71 +314,92 @@ export function App() {
           aria-label="Analysis"
         >
           <Tabs.Root
-            value={tab}
-            onValueChange={(v) => setTab(v as Tab)}
+            value={GROUPS.find(([, leaves]) => leaves.includes(tab))?.[0]}
+            onValueChange={(g) => setTab(GROUPS.find(([name]) => name === g)?.[1][0] ?? tab)}
             className="flex min-h-0 flex-1 flex-col"
           >
-            <Tabs.List className="flex border-b border-line" aria-label="Analysis panels">
-              {TABS.map(([id, text]) => (
+            <Tabs.List className="flex border-b border-line px-2" aria-label="Analysis panels">
+              {GROUPS.map(([name]) => (
                 <Tabs.Trigger
-                  key={id}
-                  value={id}
-                  className="flex-1 border-b-2 border-transparent px-1 py-2.5 text-xs text-dim data-[state=active]:border-accent data-[state=active]:text-ink"
+                  key={name}
+                  value={name}
+                  className="border-b-2 border-transparent px-3 py-3 text-sm text-dim hover:text-ink data-[state=active]:border-accent data-[state=active]:font-medium data-[state=active]:text-ink"
                 >
-                  {text}
+                  {name}
                 </Tabs.Trigger>
               ))}
             </Tabs.List>
-            <Tabs.Content value="reasoning" className="min-h-0 flex-1">
-              <ReasoningPanel />
-            </Tabs.Content>
-            <Tabs.Content value="search" className="min-h-0 flex-1">
-              <SearchPanel />
-            </Tabs.Content>
-            <Tabs.Content value="planning" className="min-h-0 flex-1">
-              <PlanningPanel />
-            </Tabs.Content>
-            <Tabs.Content value="uncertainty" className="min-h-0 flex-1">
-              <UncertaintyPanel />
-            </Tabs.Content>
-            <Tabs.Content value="optimize" className="min-h-0 flex-1">
-              <OptimizePanel />
-            </Tabs.Content>
-            <Tabs.Content value="agent" className="min-h-0 flex-1">
-              <AgentPanel />
-            </Tabs.Content>
-            <Tabs.Content value="syllabus" className="min-h-0 flex-1">
-              <SyllabusPanel />
-            </Tabs.Content>
+            {GROUPS.map(([name, leaves]) => (
+              <Tabs.Content key={name} value={name} className="flex min-h-0 flex-1 flex-col">
+                {leaves.length === 1 ? (
+                  <div className="min-h-0 flex-1">{LEAVES[leaves[0] as Tab][1]()}</div>
+                ) : (
+                  <Tabs.Root
+                    value={tab}
+                    onValueChange={(v) => setTab(v as Tab)}
+                    className="flex min-h-0 flex-1 flex-col"
+                  >
+                    <Tabs.List className="flex gap-1 border-b border-line px-3 py-2">
+                      {leaves.map((id) => (
+                        <Tabs.Trigger
+                          key={id}
+                          value={id}
+                          className="rounded-md px-2.5 py-1 text-[13px] text-dim hover:text-ink data-[state=active]:bg-raised data-[state=active]:text-ink"
+                        >
+                          {LEAVES[id][0]}
+                        </Tabs.Trigger>
+                      ))}
+                    </Tabs.List>
+                    {leaves.map((id) => (
+                      <Tabs.Content key={id} value={id} className="min-h-0 flex-1">
+                        {LEAVES[id][1]()}
+                      </Tabs.Content>
+                    ))}
+                  </Tabs.Root>
+                )}
+              </Tabs.Content>
+            ))}
           </Tabs.Root>
         </aside>
       </div>
 
-      <footer className="grid h-[190px] grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] border-t border-line bg-panel">
-        <div className="min-w-0 overflow-y-auto border-r border-line">
-          <Controls />
-        </div>
-        <div className="min-h-0 min-w-0">
-          <EventLog />
-        </div>
-      </footer>
       <ExplainDialog />
       <CommandPalette />
     </div>
   );
 }
 
+const SWATCH: [string, string][] = [
+  ["wall", "bg-[#2f353d]"],
+  ["rubble", "bg-[#efe9dc] border border-[#8a7a62] border-dotted"],
+  ["fire", "bg-[#c8402c]"],
+  ["hot zone (+4 cost)", "bg-[rgba(214,110,40,0.25)]"],
+  ["exit", "bg-[#e5f0e8] border border-go"],
+];
+
 function Legend({ running }: { running: boolean }) {
   return (
-    <div className="flex flex-wrap gap-x-3 pt-1.5 text-[11px] text-dim">
-      <span>▦ wall</span>
-      <span>▨ rubble</span>
-      <span>♨ fire</span>
-      <span>╱ hot zone (+4)</span>
-      <span>☺ person</span>
-      <span>⇥ exit</span>
-      <span>◈ agent</span>
-      {running && <span>- - route</span>}
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 pb-2 text-xs text-dim">
+      {SWATCH.map(([name, cls]) => (
+        <span key={name} className="inline-flex items-center gap-1.5">
+          <span className={`size-3 rounded-[2px] ${cls}`} aria-hidden />
+          {name}
+        </span>
+      ))}
+      <span className="inline-flex items-center gap-1.5">
+        <span className="size-3 rounded-full border-2 border-accent bg-white" aria-hidden />
+        person
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <span className="size-3 rounded-[2px] bg-ink" aria-hidden />
+        agent
+      </span>
+      {running && (
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-0.5 w-4 bg-accent" aria-hidden />
+          route
+        </span>
+      )}
     </div>
   );
 }

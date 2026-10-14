@@ -397,7 +397,10 @@ export function GraphView() {
   const [open, setOpen] = useState<number | null>(null);
   const out = run.data?.tick === tick ? run.data : undefined;
   return (
-    <Section title="Planning graph">
+    <Section
+      help="Each level adds everything one more round of actions could make true. Mutex (⊗) marks pairs that cannot hold or happen together. The first level where the goal appears without a mutex is a lower bound on the plan's length."
+      title="Planning graph"
+    >
       <ScopeBar
         scope={scope}
         setScope={setScope}
@@ -477,11 +480,6 @@ export function GraphView() {
               );
             })}
           </ol>
-          <p className="mt-2 text-xs text-dim">
-            Each level adds everything one more round of actions could make true. Mutex (⊗) marks
-            pairs that cannot hold or happen together. The first level where the goal appears
-            without a mutex is a lower bound on the plan's length.
-          </p>
         </div>
       )}
     </Section>

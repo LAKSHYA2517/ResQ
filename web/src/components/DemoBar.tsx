@@ -24,7 +24,7 @@ export function DemoBar() {
     <section aria-label="Guided demo" className="border-b border-accent/60 bg-accent/10 px-4 py-2">
       <div className="flex items-start gap-4">
         <div className="min-w-0 flex-1">
-          <div className="text-xs uppercase tracking-wider text-accent">
+          <div className="text-xs font-medium text-accent">
             Guided demo · step {step + 1} of {STEPS.length}
           </div>
           <div className="text-base font-semibold">{s.title}</div>

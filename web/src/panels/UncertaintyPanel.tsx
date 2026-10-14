@@ -40,7 +40,7 @@ function Diagram({
           markerHeight="7"
           orient="auto"
         >
-          <path d="M0,0 L10,5 L0,10 z" fill="#9db0c4" />
+          <path d="M0,0 L10,5 L0,10 z" fill="#5c636c" />
         </marker>
       </defs>
       {net.nodes.flatMap((n) =>
@@ -55,7 +55,7 @@ function Diagram({
               y1={a[1] + 14}
               x2={b[0]}
               y2={b[1] - 16}
-              stroke="#9db0c4"
+              stroke="#5c636c"
               strokeWidth="1.5"
               markerEnd="url(#arrow)"
             />
@@ -75,12 +75,12 @@ function Diagram({
               width="80"
               height="30"
               rx="15"
-              fill={observed ? "#16222f" : "#0f1822"}
-              stroke={n.name === query ? "#fde047" : observed ? "#22d3ee" : "#2a3b4f"}
+              fill={observed ? "#eeebe2" : "#fbfaf7"}
+              stroke={n.name === query ? "#b8322a" : observed ? "#1f4fa3" : "#d9d4c7"}
               strokeWidth={n.name === query ? 2.5 : 1.5}
               strokeDasharray={observed ? "" : "4 3"}
             />
-            <text x={at[0]} y={at[1] + 4} textAnchor="middle" fill="#eaf1f8" fontSize="12">
+            <text x={at[0]} y={at[1] + 4} textAnchor="middle" fill="#1c2229" fontSize="12">
               {n.name}
               {observed ? (e ? " = T" : " = F") : n.name === query ? " ?" : ""}
             </text>

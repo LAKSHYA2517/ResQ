@@ -1,20 +1,23 @@
 @import "tailwindcss";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
 
-/* "Mission control": dark, high contrast, readable on a projector at 1366x768. */
+/* "Technical drawing": paper, ink lines, one drafting-blue accent. Light so it survives a
+ * classroom projector; every text colour is >= 4.5:1 on --color-bg. */
 @theme {
-  --color-bg: #0a1017;
-  --color-panel: #0f1822;
-  --color-raised: #16222f;
-  --color-line: #2a3b4f;
-  --color-ink: #eaf1f8;
-  --color-dim: #9db0c4;
-  --color-accent: #22d3ee;
-  --color-go: #4ade80;
-  --color-warn: #fbbf24;
-  --color-bad: #f87171;
-  --color-route: #fde047;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --color-bg: #f5f3ed;
+  --color-panel: #fbfaf7;
+  --color-raised: #eeebe2;
+  --color-line: #d9d4c7;
+  --color-ink: #1c2229;
+  --color-dim: #5c636c;
+  --color-accent: #1f4fa3;
+  --color-go: #2b7a4b;
+  --color-warn: #9a5b00;
+  --color-bad: #b8322a;
+  --color-route: #1f4fa3;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, Menlo, monospace;
 }
 
 html,
@@ -28,6 +31,7 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-size: 14px;
+  font-feature-settings: "tnum", "cv11";
   overflow: hidden;
 }
 

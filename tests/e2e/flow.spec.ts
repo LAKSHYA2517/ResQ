@@ -41,7 +41,7 @@ test("load, play, inject a fire, see the replan and its reason", async ({ page }
 
   // Inject a fire on the route.
   const event = page.waitForResponse((r) => r.url().endsWith("/simulation/event"));
-  await page.getByRole("button", { name: /On route/ }).click();
+  await page.getByRole("button", { name: /Fire on route/ }).click();
   const result = (await (await event).json()) as {
     snapshot: Snapshot;
     diff: { added: string[] };
@@ -56,6 +56,7 @@ test("load, play, inject a fire, see the replan and its reason", async ({ page }
   await expect(page.getByText("Previous plan (dropped)")).toBeVisible();
 
   // The fact diff is on the Reasoning tab.
+  await page.getByRole("tab", { name: "Reasoning" }).click();
   await page.getByRole("tab", { name: "Logic" }).click();
   await expect(page.getByText("Last event changed the knowledge base")).toBeVisible();
   for (const f of result.diff.added) {

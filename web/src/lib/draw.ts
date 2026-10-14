@@ -26,23 +26,25 @@ export interface Layout {
 }
 
 export const COLORS = {
-  bg: "#0a1017",
-  floor: "#131c27",
-  grid: "#223246",
-  wall: "#56657a",
-  wallLine: "#2b3544",
-  rubble: "#3a2e20",
-  rubbleLine: "#c79a5b",
-  hot: "#ffa733",
-  fire: "#ff4d2e",
-  fireCore: "#ffd23f",
-  exit: "#0c4a2a",
-  exitEdge: "#4ade80",
-  agent: "#22d3ee",
-  route: "#fde047",
-  target: "#fde047",
-  issue: "#ff2d55",
-  status: { WAITING: "#38bdf8", CARRIED: "#c4b5fd", EVACUATED: "#4ade80", TRAPPED: "#f87171" },
+  bg: "#f5f3ed",
+  floor: "#fbfaf7",
+  grid: "#e3dfd4",
+  wall: "#2f353d",
+  rubble: "#efe9dc",
+  rubbleLine: "#8a7a62",
+  hot: "rgba(214,110,40,0.16)",
+  fire: "#c8402c",
+  fireCore: "#f0a24a",
+  exit: "#e5f0e8",
+  exitEdge: "#2b7a4b",
+  blocked: "#b8322a",
+  ink: "#1c2229",
+  paper: "#ffffff",
+  agent: "#1c2229",
+  route: "#1f4fa3",
+  target: "#1f4fa3",
+  issue: "#b8322a",
+  status: { WAITING: "#1f4fa3", CARRIED: "#6b4fa3", EVACUATED: "#2b7a4b", TRAPPED: "#b8322a" },
 } as const;
 
 export function fitLayout(w: number, h: number, rows: number, cols: number): Layout {
@@ -67,70 +69,23 @@ const center = (l: Layout, [r, c]: Cell): [number, number] => [
   l.oy + (r + 0.5) * l.cell,
 ];
 
-function hatch(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  s: number,
-  color: string,
-  gap: number,
-  dir: 1 | -1,
-  width = 1.5,
-) {
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(x, y, s, s);
-  ctx.clip();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = width;
-  ctx.beginPath();
-  for (let d = -s; d < 2 * s; d += gap) {
-    if (dir === 1) {
-      ctx.moveTo(x + d, y + s);
-      ctx.lineTo(x + d + s, y);
-    } else {
-      ctx.moveTo(x + d, y);
-      ctx.lineTo(x + d + s, y + s);
-    }
-  }
-  ctx.stroke();
-  ctx.restore();
-}
-
-/** Rubble: scattered stones, so it reads differently from the hot zone's diagonal stripes. */
-function stones(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, seed: number) {
+/** Rubble: a seeded stipple, so it reads as loose debris rather than a solid block. */
+function stipple(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, seed: number) {
   ctx.fillStyle = COLORS.rubbleLine;
-  for (let i = 0; i < 7; i++) {
+  const r = Math.max(0.9, s * 0.03);
+  for (let i = 0; i < 14; i++) {
     const a = Math.sin(seed * 12.9898 + i * 78.233) * 43758.5453;
     const b = Math.sin(seed * 39.346 + i * 11.135) * 24634.6345;
-    const px = x + s * (0.12 + 0.76 * (a - Math.floor(a)));
-    const py = y + s * (0.12 + 0.76 * (b - Math.floor(b)));
-    const size = s * (0.05 + 0.05 * ((i * 37) % 3));
     ctx.beginPath();
-    ctx.moveTo(px - size, py + size * 0.6);
-    ctx.lineTo(px - size * 0.3, py - size);
-    ctx.lineTo(px + size, py - size * 0.2);
-    ctx.lineTo(px + size * 0.5, py + size);
-    ctx.closePath();
+    ctx.arc(
+      x + s * (0.1 + 0.8 * (a - Math.floor(a))),
+      y + s * (0.1 + 0.8 * (b - Math.floor(b))),
+      r,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
-}
-
-function bricks(ctx: CanvasRenderingContext2D, x: number, y: number, s: number) {
-  ctx.strokeStyle = COLORS.wallLine;
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  const rows = 3;
-  for (let i = 1; i < rows; i++) {
-    ctx.moveTo(x, y + (s * i) / rows);
-    ctx.lineTo(x + s, y + (s * i) / rows);
-  }
-  for (let i = 0; i < rows; i++) {
-    const off = i % 2 === 0 ? s * 0.33 : s * 0.66;
-    ctx.moveTo(x + off, y + (s * i) / rows);
-    ctx.lineTo(x + off, y + (s * (i + 1)) / rows);
-  }
-  ctx.stroke();
 }
 
 function flame(
@@ -141,9 +96,9 @@ function flame(
   t: number,
   seed: number,
 ) {
-  const flick = Math.sin(t * 7 + seed * 1.7) * 0.08 + Math.sin(t * 13 + seed) * 0.05;
-  const h = s * (0.42 + flick);
-  const w = s * 0.26;
+  const flick = Math.sin(t * 7 + seed * 1.7) * 0.05 + Math.sin(t * 13 + seed) * 0.03;
+  const h = s * (0.32 + flick);
+  const w = s * 0.2;
   ctx.fillStyle = COLORS.fire;
   ctx.beginPath();
   ctx.moveTo(cx, cy - h);
@@ -152,86 +107,37 @@ function flame(
   ctx.fill();
   ctx.fillStyle = COLORS.fireCore;
   ctx.beginPath();
-  ctx.moveTo(cx, cy - h * 0.2);
-  ctx.bezierCurveTo(cx + w * 0.7, cy + h * 0.1, cx + w * 0.5, cy + h * 0.65, cx, cy + h * 0.65);
-  ctx.bezierCurveTo(cx - w * 0.5, cy + h * 0.65, cx - w * 0.7, cy + h * 0.1, cx, cy - h * 0.2);
+  ctx.moveTo(cx, cy - h * 0.1);
+  ctx.bezierCurveTo(cx + w * 0.6, cy + h * 0.15, cx + w * 0.45, cy + h * 0.62, cx, cy + h * 0.62);
+  ctx.bezierCurveTo(cx - w * 0.45, cy + h * 0.62, cx - w * 0.6, cy + h * 0.15, cx, cy - h * 0.1);
   ctx.fill();
 }
 
-function pictogram(
+const font = (px: number, weight = 600) =>
+  `${weight} ${px}px "Inter Variable", system-ui, sans-serif`;
+
+/** A person: white disc, status-coloured ring, id inside. Trapped people get a filled disc so
+ * they read at a glance from the back of a room. */
+function marker(
   ctx: CanvasRenderingContext2D,
   cx: number,
   cy: number,
-  s: number,
-  color: string,
-) {
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.arc(cx, cy - s * 0.14, s * 0.1, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(cx - s * 0.17, cy + s * 0.2);
-  ctx.quadraticCurveTo(cx, cy - s * 0.12, cx + s * 0.17, cy + s * 0.2);
-  ctx.closePath();
-  ctx.fill();
-}
-
-function badge(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
   r: number,
+  id: string,
   status: GridState["people"][number]["status"],
 ) {
-  ctx.fillStyle = "#0a1017";
+  const color = COLORS.status[status];
+  const filled = status === "TRAPPED" || status === "EVACUATED";
+  ctx.fillStyle = filled ? color : COLORS.paper;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(1.5, r * 0.16);
   ctx.beginPath();
-  ctx.arc(x, y, r + 1.5, 0, Math.PI * 2);
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = COLORS.status[status];
-  ctx.strokeStyle = COLORS.status[status];
-  ctx.lineWidth = Math.max(1.5, r * 0.28);
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  if (status === "TRAPPED") {
-    ctx.beginPath();
-    ctx.moveTo(x, y - r);
-    ctx.lineTo(x + r, y + r * 0.8);
-    ctx.lineTo(x - r, y + r * 0.8);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "#0a1017";
-    ctx.fillRect(x - r * 0.12, y - r * 0.3, r * 0.24, r * 0.55);
-  } else if (status === "EVACUATED") {
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#0a1017";
-    ctx.beginPath();
-    ctx.moveTo(x - r * 0.5, y);
-    ctx.lineTo(x - r * 0.1, y + r * 0.45);
-    ctx.lineTo(x + r * 0.55, y - r * 0.4);
-    ctx.stroke();
-  } else if (status === "CARRIED") {
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#0a1017";
-    ctx.beginPath();
-    ctx.moveTo(x, y + r * 0.5);
-    ctx.lineTo(x, y - r * 0.5);
-    ctx.moveTo(x - r * 0.4, y - r * 0.1);
-    ctx.lineTo(x, y - r * 0.55);
-    ctx.lineTo(x + r * 0.4, y - r * 0.1);
-    ctx.stroke();
-  } else {
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#0a1017";
-    ctx.beginPath();
-    ctx.arc(x, y, r * 0.35, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  ctx.stroke();
+  ctx.fillStyle = filled ? COLORS.paper : color;
+  ctx.font = font(Math.max(9, r * 0.9));
+  ctx.fillText(id, cx, cy + 0.5);
 }
 
 export function drawScene(
@@ -244,104 +150,119 @@ export function drawScene(
   const { state } = scene;
   const s = l.cell;
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  const fire = new Set(state.fire.map(key));
   const hot = new Set(state.hot.map(key));
   const t = scene.motion ? time : 0;
+  const cellRect = ([r, c]: Cell, inset: number) =>
+    [l.ox + c * s + inset, l.oy + r * s + inset, s - 2 * inset, s - 2 * inset] as const;
 
-  // terrain, hot zone, fire
+  // terrain: flat fills, hairline grid
   for (let r = 0; r < state.rows; r++) {
     for (let c = 0; c < state.cols; c++) {
       const x = l.ox + c * s;
       const y = l.oy + r * s;
       const kind = state.terrain[r]?.[c] ?? "floor";
-      ctx.fillStyle = kind === "wall" ? COLORS.wall : kind === "exit" ? COLORS.exit : COLORS.floor;
-      if (kind === "rubble") ctx.fillStyle = COLORS.rubble;
+      ctx.fillStyle =
+        kind === "wall"
+          ? COLORS.wall
+          : kind === "exit"
+            ? COLORS.exit
+            : kind === "rubble"
+              ? COLORS.rubble
+              : COLORS.floor;
       ctx.fillRect(x, y, s, s);
-      if (kind === "wall") bricks(ctx, x, y, s);
-      if (kind === "rubble") stones(ctx, x, y, s, r * 7 + c);
+      if (kind === "rubble") stipple(ctx, x, y, s, r * 7 + c);
       if (hot.has(`${r},${c}`)) {
-        ctx.fillStyle = "rgba(255,167,51,0.22)";
-        ctx.fillRect(x, y, s, s);
-        hatch(ctx, x, y, s, COLORS.hot, Math.max(6, s / 5), -1, 2);
-      }
-      if (fire.has(`${r},${c}`)) {
-        ctx.fillStyle = "rgba(255,77,46,0.32)";
+        ctx.fillStyle = COLORS.hot;
         ctx.fillRect(x, y, s, s);
       }
-      ctx.strokeStyle = COLORS.grid;
-      ctx.lineWidth = 1;
-      ctx.strokeRect(x + 0.5, y + 0.5, s - 1, s - 1);
     }
   }
+  ctx.strokeStyle = COLORS.grid;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let r = 0; r <= state.rows; r++) {
+    ctx.moveTo(l.ox, l.oy + r * s + 0.5);
+    ctx.lineTo(l.ox + state.cols * s, l.oy + r * s + 0.5);
+  }
+  for (let c = 0; c <= state.cols; c++) {
+    ctx.moveTo(l.ox + c * s + 0.5, l.oy);
+    ctx.lineTo(l.ox + c * s + 0.5, l.oy + state.rows * s);
+  }
+  ctx.stroke();
+  ctx.strokeStyle = COLORS.ink;
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(l.ox, l.oy, state.cols * s, state.rows * s);
 
-  // explored heat (search run overlay)
+  // explored heat (search run overlay): blue early, amber late
   const n = scene.explored.length;
   for (let i = 0; i < Math.min(scene.exploredShown, n); i++) {
     const cell = scene.explored[i];
     if (!cell) continue;
     const tt = n > 1 ? i / (n - 1) : 0;
-    ctx.fillStyle = `hsla(${230 - 200 * tt}, 95%, 58%, 0.42)`;
-    ctx.fillRect(l.ox + cell[1] * s + 2, l.oy + cell[0] * s + 2, s - 4, s - 4);
+    ctx.fillStyle = `hsla(${215 - 175 * tt}, 70%, 55%, 0.28)`;
+    ctx.fillRect(...cellRect(cell, 1));
   }
 
   // highlight + builder issues
-  ctx.lineWidth = 3;
-  for (const cell of scene.highlight) {
-    ctx.strokeStyle = "#fff";
-    ctx.setLineDash([]);
-    ctx.strokeRect(l.ox + cell[1] * s + 2, l.oy + cell[0] * s + 2, s - 4, s - 4);
-  }
-  for (const cell of scene.issues) {
-    ctx.strokeStyle = COLORS.issue;
-    ctx.setLineDash([5, 4]);
-    ctx.strokeRect(l.ox + cell[1] * s + 2, l.oy + cell[0] * s + 2, s - 4, s - 4);
-  }
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = COLORS.ink;
+  for (const cell of scene.highlight) ctx.strokeRect(...cellRect(cell, 2));
+  ctx.strokeStyle = COLORS.issue;
+  ctx.setLineDash([4, 3]);
+  for (const cell of scene.issues) ctx.strokeRect(...cellRect(cell, 2));
   ctx.setLineDash([]);
 
-  // fire glyphs
+  // fire
   for (const [r, c] of state.fire) flame(ctx, ...center(l, [r, c]), s, t, r * 31 + c);
 
-  // exits: door glyph; X when unusable
+  // exits: a door mark (leaf + swing arc) and the id; a slash when unusable
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   for (const e of state.exits) {
-    const [cx, cy] = center(l, e.pos);
+    const [x, y] = cellRect(e.pos, 0);
     const ok = e.available && e.usable;
-    ctx.strokeStyle = ok ? COLORS.exitEdge : "#f87171";
+    const color = ok ? COLORS.exitEdge : COLORS.blocked;
+    ctx.strokeStyle = color;
     ctx.lineWidth = 2;
-    ctx.strokeRect(cx - s * 0.3, cy - s * 0.34, s * 0.6, s * 0.68);
-    ctx.fillStyle = ok ? COLORS.exitEdge : "#f87171";
-    ctx.font = `bold ${Math.max(9, s * 0.2)}px ui-sans-serif, system-ui`;
-    ctx.fillText(e.id.toUpperCase(), cx, cy - s * 0.04);
-    ctx.fillRect(cx + s * 0.1, cy + s * 0.12, s * 0.07, s * 0.07);
+    ctx.beginPath();
+    ctx.moveTo(x + s * 0.2, y + s * 0.8);
+    ctx.lineTo(x + s * 0.2, y + s * 0.25);
+    ctx.stroke();
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 2]);
+    ctx.beginPath();
+    ctx.arc(x + s * 0.2, y + s * 0.8, s * 0.55, -Math.PI / 2, 0);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = color;
+    ctx.font = font(Math.max(9, s * 0.2), 700);
+    ctx.fillText(e.id.toUpperCase(), x + s * 0.55, y + s * 0.62);
     if (!ok) {
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(cx - s * 0.3, cy - s * 0.34);
-      ctx.lineTo(cx + s * 0.3, cy + s * 0.34);
-      ctx.moveTo(cx + s * 0.3, cy - s * 0.34);
-      ctx.lineTo(cx - s * 0.3, cy + s * 0.34);
+      ctx.moveTo(x + s * 0.15, y + s * 0.85);
+      ctx.lineTo(x + s * 0.85, y + s * 0.15);
       ctx.stroke();
     }
   }
 
   // trail
-  ctx.fillStyle = "rgba(34,211,238,0.35)";
+  ctx.fillStyle = "rgba(28,34,41,0.25)";
   for (const cell of scene.trail) {
     const [cx, cy] = center(l, cell);
     ctx.beginPath();
-    ctx.arc(cx, cy, Math.max(2, s * 0.07), 0, Math.PI * 2);
+    ctx.arc(cx, cy, Math.max(1.5, s * 0.05), 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // route (animated dashes) with arrow head
+  // route: thin line, slow marching dashes, arrow head
   if (scene.route.length > 1) {
     ctx.strokeStyle = COLORS.route;
-    ctx.lineWidth = Math.max(2.5, s * 0.08);
+    ctx.lineWidth = Math.max(2, s * 0.05);
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    ctx.setLineDash([s * 0.2, s * 0.14]);
-    ctx.lineDashOffset = -t * s * 0.9;
+    ctx.setLineDash([s * 0.25, s * 0.12]);
+    ctx.lineDashOffset = -t * s * 0.6;
     ctx.beginPath();
     scene.route.forEach((cell, i) => {
       const [cx, cy] = center(l, cell);
@@ -357,105 +278,83 @@ export function drawScene(
       const ang = Math.atan2(b[0] - a[0], b[1] - a[1]);
       ctx.fillStyle = COLORS.route;
       ctx.beginPath();
-      ctx.moveTo(bx + Math.cos(ang) * s * 0.22, by + Math.sin(ang) * s * 0.22);
-      ctx.lineTo(bx + Math.cos(ang + 2.5) * s * 0.2, by + Math.sin(ang + 2.5) * s * 0.2);
-      ctx.lineTo(bx + Math.cos(ang - 2.5) * s * 0.2, by + Math.sin(ang - 2.5) * s * 0.2);
+      ctx.moveTo(bx + Math.cos(ang) * s * 0.18, by + Math.sin(ang) * s * 0.18);
+      ctx.lineTo(bx + Math.cos(ang + 2.5) * s * 0.16, by + Math.sin(ang + 2.5) * s * 0.16);
+      ctx.lineTo(bx + Math.cos(ang - 2.5) * s * 0.16, by + Math.sin(ang - 2.5) * s * 0.16);
       ctx.fill();
     }
   }
 
-  // plan waypoints
+  // plan waypoints: small numbered tags in the top-right corner of the cell
   for (const w of scene.waypoints) {
     const [cx, cy] = center(l, w.cell);
-    const r = Math.max(8, s * 0.17);
-    const x = cx + s * 0.3;
-    const y = cy - s * 0.3;
-    ctx.fillStyle = "#0a1017";
-    ctx.strokeStyle = COLORS.route;
-    ctx.lineWidth = 2;
+    const r = Math.max(7, s * 0.14);
+    const x = cx + s * 0.32;
+    const y = cy - s * 0.32;
+    ctx.fillStyle = COLORS.route;
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = COLORS.route;
-    ctx.font = `bold ${Math.max(9, r * 1.1)}px ui-sans-serif, system-ui`;
+    ctx.fillStyle = COLORS.paper;
+    ctx.font = font(Math.max(8, r * 1.1), 700);
     ctx.fillText(w.label, x, y + 0.5);
   }
 
   // people
+  const pr = Math.max(8, s * 0.28);
   for (const p of state.people) {
     if (p.status === "EVACUATED" || p.status === "CARRIED") continue; // shown at the exit / on the agent
     const [cx, cy] = center(l, p.pos);
-    const color = COLORS.status[p.status];
-    ctx.fillStyle = "rgba(10,16,23,0.82)";
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.arc(cx, cy, s * 0.32, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    pictogram(ctx, cx, cy, s, color);
-    badge(ctx, cx + s * 0.3, cy + s * 0.3, Math.max(5, s * 0.13), p.status);
-    ctx.fillStyle = "#e6edf5";
-    ctx.font = `bold ${Math.max(10, s * 0.21)}px ui-sans-serif, system-ui`;
-    ctx.fillText(p.id, cx, cy + s * 0.43);
     if (p.id === scene.targetId) {
       ctx.strokeStyle = COLORS.target;
-      ctx.lineWidth = 2.5;
-      ctx.setLineDash([6, 5]);
-      ctx.lineDashOffset = -t * 20;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 3]);
+      ctx.lineDashOffset = -t * 12;
       ctx.beginPath();
-      ctx.arc(cx, cy, s * 0.43 + Math.sin(t * 3) * 1.5, 0, Math.PI * 2);
+      ctx.arc(cx, cy, pr + Math.max(4, s * 0.1), 0, Math.PI * 2);
       ctx.stroke();
       ctx.setLineDash([]);
     }
+    marker(ctx, cx, cy, pr, p.id, p.status);
   }
   for (const e of state.exits) {
-    // evacuees queue as small ticks beside their exit
+    // evacuees line up along the bottom of their exit
     const got = state.people.filter((p) => p.status === "EVACUATED" && key(p.pos) === key(e.pos));
-    const [cx, cy] = center(l, e.pos);
+    const [x, y] = cellRect(e.pos, 0);
+    const r = Math.max(6, s * 0.13);
     got.forEach((p, i) => {
-      badge(ctx, cx - s * 0.3 + i * s * 0.2, cy + s * 0.34, Math.max(5, s * 0.12), "EVACUATED");
-      ctx.fillStyle = "#e6edf5";
-      ctx.font = `${Math.max(8, s * 0.15)}px ui-sans-serif, system-ui`;
-      ctx.fillText(p.id, cx - s * 0.3 + i * s * 0.2, cy + s * 0.2);
+      marker(ctx, x + r + 2 + i * (r * 2 + 2), y + s - r - 2, r, p.id, "EVACUATED");
     });
   }
 
-  // agent (glides), chevron shows facing; carried person rides on top
+  // agent (glides): ink square, white chevron for facing; carried person rides on top
   const ax = l.ox + (agent.pos[1] + 0.5) * s;
   const ay = l.oy + (agent.pos[0] + 0.5) * s;
+  const half = s * 0.27;
   ctx.save();
   ctx.translate(ax, ay);
-  ctx.fillStyle = "#06222a";
-  ctx.strokeStyle = COLORS.agent;
-  ctx.lineWidth = 3;
-  const half = s * 0.3;
-  ctx.beginPath();
-  ctx.roundRect(-half, -half, half * 2, half * 2, s * 0.08);
-  ctx.fill();
-  ctx.stroke();
-  ctx.rotate(agent.facing);
   ctx.fillStyle = COLORS.agent;
   ctx.beginPath();
-  ctx.moveTo(half * 0.7, 0);
-  ctx.lineTo(-half * 0.35, -half * 0.5);
-  ctx.lineTo(-half * 0.1, 0);
-  ctx.lineTo(-half * 0.35, half * 0.5);
+  ctx.roundRect(-half, -half, half * 2, half * 2, s * 0.06);
+  ctx.fill();
+  ctx.rotate(agent.facing);
+  ctx.fillStyle = COLORS.paper;
+  ctx.beginPath();
+  ctx.moveTo(half * 0.65, 0);
+  ctx.lineTo(-half * 0.4, -half * 0.5);
+  ctx.lineTo(-half * 0.15, 0);
+  ctx.lineTo(-half * 0.4, half * 0.5);
   ctx.closePath();
   ctx.fill();
   ctx.restore();
   if (state.agent.carrying) {
-    pictogram(ctx, ax, ay - s * 0.38, s * 0.7, COLORS.status.CARRIED);
-    ctx.fillStyle = COLORS.status.CARRIED;
-    ctx.font = `bold ${Math.max(9, s * 0.18)}px ui-sans-serif, system-ui`;
-    ctx.fillText(state.agent.carrying, ax, ay + s * 0.42);
+    marker(ctx, ax + half, ay - half, Math.max(6, s * 0.14), state.agent.carrying, "CARRIED");
   }
 
   // hover outline (builder / event pick)
   if (scene.hover) {
-    ctx.strokeStyle = scene.pickMode ? COLORS.fire : "#ffffff";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(l.ox + scene.hover[1] * s + 1, l.oy + scene.hover[0] * s + 1, s - 2, s - 2);
+    ctx.strokeStyle = scene.pickMode ? COLORS.fire : COLORS.ink;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(...cellRect(scene.hover, 1));
   }
 }

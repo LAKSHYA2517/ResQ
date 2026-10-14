@@ -29,14 +29,14 @@ function Board({ state, run, shown }: { state: GridState; run: SearchRun; shown:
         const kind = state.terrain[r]?.[c];
         ctx.fillStyle =
           kind === "wall" ? COLORS.wall : kind === "rubble" ? COLORS.rubble : COLORS.floor;
-        if (hot.has(`${r},${c}`)) ctx.fillStyle = "#5a3a12";
+        if (hot.has(`${r},${c}`)) ctx.fillStyle = "#f3d9b8";
         if (fire.has(`${r},${c}`)) ctx.fillStyle = COLORS.fire;
         ctx.fillRect(c * s, r * s, s - 1, s - 1);
       }
     }
     const n = run.expansion_order.length;
     run.expansion_order.slice(0, shown).forEach((cell, i) => {
-      ctx.fillStyle = `hsla(${230 - 200 * (n > 1 ? i / (n - 1) : 0)}, 95%, 58%, 0.7)`;
+      ctx.fillStyle = `hsla(${215 - 175 * (n > 1 ? i / (n - 1) : 0)}, 70%, 55%, 0.45)`;
       ctx.fillRect(cell[1] * s + 1, cell[0] * s + 1, s - 3, s - 3);
     });
     if (done && run.path.length > 1) {

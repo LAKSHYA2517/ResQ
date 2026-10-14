@@ -40,7 +40,7 @@ test("Module 2: eight algorithms, the race and the heuristic lab", async ({ page
   }
   expect(out.runs.some((r: { optimal_vs_ucs: boolean }) => !r.optimal_vs_ucs)).toBe(true);
 
-  await page.getByRole("button", { name: "🏁 Replay race" }).click();
+  await page.getByRole("button", { name: "Replay race" }).click();
   await expect(page.getByRole("dialog")).toContainText("Algorithm race");
   await expect(page.getByRole("dialog").locator("canvas")).toHaveCount(8);
   await page.getByRole("button", { name: "Close" }).click();
@@ -78,6 +78,7 @@ test("Module 5: beliefs set the risk, and sampling converges to the exact answer
   page,
 }) => {
   await start(page);
+  await page.getByRole("tab", { name: "Reasoning" }).click();
   await page.getByRole("tab", { name: "Bayes" }).click();
   await expect(page.getByText(/Risk 5\/5/)).toBeVisible(); // p2 next to the fire
   const out = await json(page, "/bayes/infer", () =>
@@ -91,6 +92,7 @@ test("Module 5: beliefs set the risk, and sampling converges to the exact answer
 
 test("Module 3: order optimizer against the optimum, and alpha-beta savings", async ({ page }) => {
   await start(page, "Mass Evacuation");
+  await page.getByRole("tab", { name: "Analysis" }).click();
   await page.getByRole("tab", { name: "Optimize" }).click();
   const order = await json(page, "/optimize/order", () =>
     page.getByRole("button", { name: "Optimise" }).click(),
@@ -111,6 +113,7 @@ test("Module 3: order optimizer against the optimum, and alpha-beta savings", as
 
   await page.getByRole("button", { name: "Restart with worst-case fire" }).click();
   await expect(page.getByText("worst-case fire", { exact: true })).toBeVisible();
+  await page.getByRole("tab", { name: "Analysis" }).click();
   await page.getByRole("tab", { name: "Agent" }).click();
   await expect(page.getByText("Multi-agent (competitive)")).toBeVisible();
 });
@@ -125,9 +128,13 @@ test("Modules 6 and 1: planners agree, PEAS, and the syllabus Run it links", asy
   expect(plans.rows).toHaveLength(4);
   await expect(page.getByText("✓ all planners found the same cost")).toBeVisible();
 
+  await page.getByRole("tab", { name: "Analysis" }).click();
+
   await page.getByRole("tab", { name: "Agent" }).click();
   await expect(page.getByText("Performance")).toBeVisible();
   await expect(page.getByText("Stochastic", { exact: true })).toBeVisible();
+
+  await page.getByRole("tab", { name: "Analysis" }).click();
 
   await page.getByRole("tab", { name: "Syllabus" }).click();
   await expect(page.getByRole("button", { name: "Run it" })).toHaveCount(11);
@@ -185,6 +192,8 @@ test("P5: planning graph, HTN tree and the agent benchmark", async ({ page }) =>
   await expect(page.getByText(`goal first possible at level ${graph.goal_level}`)).toBeVisible();
   await page.getByRole("button", { name: /^S1/ }).click();
   await expect(page.getByText(/atom mutex:/)).toBeVisible();
+
+  await page.getByRole("tab", { name: "Analysis" }).click();
 
   await page.getByRole("tab", { name: "Agent" }).click();
   const bench = await json(page, "/bench/agents", () =>

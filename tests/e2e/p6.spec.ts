@@ -56,7 +56,7 @@ test("trace integrity: every tick of the Showcase run on screen equals the engin
     if (snap.tick === 6 && !injected) {
       injected = true;
       const event = page.waitForResponse((r) => r.url().endsWith("/simulation/event"));
-      await page.getByRole("button", { name: /On route/ }).click();
+      await page.getByRole("button", { name: /Fire on route/ }).click();
       snap = (await (await event).json()).snapshot;
       expect(snap.replan_reason).toMatch(/is now on fire/);
       await expect(page.getByText(snap.replan_reason ?? "", { exact: false }).first()).toBeVisible();
@@ -111,7 +111,7 @@ test("command palette and report export", async ({ page }) => {
   const downloads: string[] = [];
   page.on("download", (d) => downloads.push(d.suggestedFilename()));
   const report = page.waitForResponse((r) => r.url().includes("/simulation/report"));
-  await page.getByRole("button", { name: "⤓ Report" }).click();
+  await page.getByRole("button", { name: "Report" }).click();
   expect((await (await report).json()).scenario.name).toBe("Triage Dilemma");
   await expect.poll(() => downloads.length).toBe(2);
   expect(downloads.sort()).toEqual([

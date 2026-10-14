@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
+import { Metrics } from "../components/RunSidebar";
 import { Empty, Section } from "../components/ui";
 import { useSim } from "../store/sim";
 import { Benchmark } from "./Benchmark";
@@ -17,6 +18,7 @@ export function AgentPanel() {
   if (!p) return <Empty>Loading…</Empty>;
   return (
     <div className="h-full overflow-y-auto">
+      <Metrics />
       <Section title="Agent type">
         <p className="text-sm">{p.agent_type}</p>
       </Section>
@@ -44,10 +46,6 @@ export function AgentPanel() {
             ))}
           </tbody>
         </table>
-        <p className="mt-2 text-xs text-dim">
-          Derived from the scenario's parameters: change the fire spread, add sensor noise or switch
-          to worst-case fire and these rows change.
-        </p>
       </Section>
       <Benchmark />
     </div>
