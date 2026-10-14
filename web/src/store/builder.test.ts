@@ -3,7 +3,6 @@ import { blankDraft } from "../lib/draft";
 import { useBuilder } from "./builder";
 
 beforeEach(() => {
-  localStorage.clear();
   useBuilder.setState({
     draft: blankDraft(6, 6),
     past: [],
@@ -11,7 +10,6 @@ beforeEach(() => {
     tool: "wall",
     selected: null,
     issues: [],
-    library: [],
     stroking: false,
   });
 });
@@ -53,14 +51,6 @@ describe("builder store", () => {
     useBuilder.getState().paintAt([5, 3]); // default person p1 sits bottom-middle of a 6x6
     expect(useBuilder.getState().selected).toBe("p1");
     expect(useBuilder.getState().draft.terrain[5]).toBe("......");
-  });
-
-  it("saves to and removes from the browser library", () => {
-    useBuilder.getState().save();
-    expect(useBuilder.getState().library.map((l) => l.name)).toEqual(["My scenario"]);
-    expect(JSON.parse(localStorage.getItem("resq.scenarios") ?? "[]")).toHaveLength(1);
-    useBuilder.getState().remove("My scenario");
-    expect(useBuilder.getState().library).toEqual([]);
   });
 
   it("resizing is undoable", () => {

@@ -56,9 +56,8 @@ The full map from module to code to UI to tests is in [docs/SYLLABUS_MAP.md](doc
 | `make bench` | Seeded agent-type benchmark; writes [docs/BENCHMARK.md](docs/BENCHMARK.md) |
 | `make e2e` | Browser tests only |
 
-In the app: **space** plays or pauses, **→** steps, **←** scrubs back, **p** toggles
-presentation mode, **Ctrl/Cmd+K** opens the command palette, and **⤓ Report** downloads the
-run report (JSON and a printable page).
+In the app: **space** plays or pauses, **→** steps, **←** scrubs back, **Ctrl/Cmd+K** opens the
+command palette, and **⤓ Report** downloads the run report (JSON and a printable page).
 
 ## How it is built
 

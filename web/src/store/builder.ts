@@ -2,30 +2,7 @@ import { create } from "zustand";
 import type { Cell, Issue, Scenario } from "../api/client";
 import { blankDraft, paint, resize, type Tool } from "../lib/draft";
 
-const LIBRARY_KEY = "resq.scenarios";
 const HISTORY_LIMIT = 100;
-
-export interface SavedScenario {
-  name: string;
-  scenario: Scenario;
-}
-
-function readLibrary(): SavedScenario[] {
-  try {
-    const raw = localStorage.getItem(LIBRARY_KEY);
-    return raw ? (JSON.parse(raw) as SavedScenario[]) : [];
-  } catch {
-    return []; // private window / blocked storage: the builder still works without it
-  }
-}
-
-function writeLibrary(items: SavedScenario[]) {
-  try {
-    localStorage.setItem(LIBRARY_KEY, JSON.stringify(items));
-  } catch {
-    /* storage unavailable: nothing to do */
-  }
-}
 
 interface BuilderStore {
   draft: Scenario;
@@ -34,7 +11,6 @@ interface BuilderStore {
   tool: Tool;
   selected: string | null; // person id shown in the inspector
   issues: Issue[];
-  library: SavedScenario[];
   stroking: boolean; // a drag started and has not changed anything yet
 
   setTool: (tool: Tool) => void;
@@ -47,8 +23,6 @@ interface BuilderStore {
   undo: () => void;
   redo: () => void;
   setIssues: (issues: Issue[]) => void;
-  save: () => void;
-  remove: (name: string) => void;
 }
 
 export const useBuilder = create<BuilderStore>((set, get) => {
@@ -66,7 +40,6 @@ export const useBuilder = create<BuilderStore>((set, get) => {
     tool: "wall",
     selected: null,
     issues: [],
-    library: readLibrary(),
     stroking: false,
 
     setTool: (tool) => set({ tool }),
@@ -118,18 +91,5 @@ export const useBuilder = create<BuilderStore>((set, get) => {
       }),
 
     setIssues: (issues) => set({ issues }),
-
-    save: () => {
-      const { draft, library } = get();
-      const rest = library.filter((l) => l.name !== draft.name);
-      const items = [...rest, { name: draft.name, scenario: draft }];
-      writeLibrary(items);
-      set({ library: items });
-    },
-    remove: (name) => {
-      const items = get().library.filter((l) => l.name !== name);
-      writeLibrary(items);
-      set({ library: items });
-    },
   };
 });

@@ -27,7 +27,6 @@ interface UiStore {
   showState: boolean; // the "state as structured data" section in Reasoning
   demoStep: number | null; // null = guided demo is off
   focus: string | null;
-  presentation: boolean; // projector mode: bigger text, no builder dock
   palette: boolean; // command palette open // a section a "Run it" link or demo step asks a panel to act on
   setMode: (m: Mode) => void;
   setTab: (t: Tab) => void;
@@ -37,7 +36,6 @@ interface UiStore {
   setShowState: (on: boolean) => void;
   setDemoStep: (n: number | null) => void;
   setFocus: (f: string | null) => void;
-  setPresentation: (on: boolean) => void;
   setPalette: (on: boolean) => void;
 }
 
@@ -50,7 +48,6 @@ export const useUi = create<UiStore>((set) => ({
   showState: false,
   demoStep: null,
   focus: null,
-  presentation: false,
   palette: false,
   setMode: (mode) => set({ mode }),
   setTab: (tab) => set({ tab }),
@@ -60,6 +57,5 @@ export const useUi = create<UiStore>((set) => ({
   setShowState: (showState) => set({ showState }),
   setDemoStep: (demoStep) => set({ demoStep }),
   setFocus: (focus) => set({ focus }),
-  setPresentation: (presentation) => set({ presentation }),
   setPalette: (palette) => set({ palette }),
 }));

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { api } from "../api/client";
-import { MAX_SIDE, MIN_SIDE, parseImported, type Tool } from "../lib/draft";
+import { MAX_SIDE, MIN_SIDE, type Tool } from "../lib/draft";
 import { useBuilder } from "../store/builder";
 import { useSim } from "../store/sim";
 import { useUi } from "../store/ui";
@@ -28,7 +28,6 @@ export function Builder() {
   const b = useBuilder();
   const { start, startDraft, busy } = useSim();
   const setMode = useUi((s) => s.setMode);
-  const file = useRef<HTMLInputElement>(null);
   const scenarios = useQuery({ queryKey: ["scenarios"], queryFn: api.scenarios });
   const [rows, cols] = b.draft.grid_size;
   const person = b.draft.people.find((p) => p.id === b.selected);
@@ -58,25 +57,6 @@ export function Builder() {
     if (await startDraft(b.draft)) setMode("run");
   };
 
-  const exportJson = () => {
-    const blob = new Blob([JSON.stringify(b.draft, null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `${b.draft.name.replace(/\W+/g, "_") || "scenario"}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  };
-
-  const importJson = async (f: File | undefined) => {
-    if (!f) return;
-    try {
-      b.load(parseImported(await f.text()));
-    } catch (e) {
-      useSim.setState({ error: `Could not import ${f.name}: ${(e as Error).message}` });
-    }
-    if (file.current) file.current.value = "";
-  };
-
   return (
     <div className="flex h-full flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto">
@@ -98,42 +78,6 @@ export function Builder() {
                 ))}
             </select>
           </div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <Btn onClick={() => file.current?.click()}>Import JSON</Btn>
-            <Btn onClick={exportJson}>Export JSON</Btn>
-            <Btn onClick={b.save}>Save here</Btn>
-            <input
-              ref={file}
-              type="file"
-              accept="application/json,.json"
-              className="hidden"
-              aria-label="Import scenario file"
-              onChange={(e) => void importJson(e.target.files?.[0])}
-            />
-          </div>
-          {b.library.length > 0 && (
-            <ul className="mt-2 space-y-1">
-              {b.library.map((l) => (
-                <li key={l.name} className="flex items-center gap-2 text-sm">
-                  <button
-                    type="button"
-                    className="min-w-0 flex-1 truncate text-left text-accent hover:underline"
-                    onClick={() => b.load(l.scenario)}
-                  >
-                    {l.name}
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Delete saved ${l.name}`}
-                    className="text-dim hover:text-bad"
-                    onClick={() => b.remove(l.name)}
-                  >
-                    ✕
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
         </Section>
 
         <Section

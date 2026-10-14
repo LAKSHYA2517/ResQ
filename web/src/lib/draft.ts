@@ -134,27 +134,6 @@ export function personAt(draft: Scenario, cell: Cell) {
   return draft.people.find((p) => same(p.pos, cell));
 }
 
-/** Parse imported JSON: accept only objects; the engine validates the rest. */
-export function parseImported(text: string): Scenario {
-  const raw: unknown = JSON.parse(text);
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error("The file must contain one scenario object.");
-  }
-  const d = raw as Partial<Scenario>;
-  const base = blankDraft();
-  return {
-    ...base,
-    ...d,
-    scripted_events: d.scripted_events ?? [],
-    params: {
-      ...DEFAULT_PARAMS,
-      ...d.params,
-      weights: { ...DEFAULT_PARAMS.weights, ...d.params?.weights },
-      cost_model: { ...DEFAULT_PARAMS.cost_model, ...d.params?.cost_model },
-    },
-  };
-}
-
 /** What the canvas needs to show a draft. Hot zones are derived by the engine and appear once
  * the scenario is started, so none are drawn here. */
 export function draftToState(d: Scenario): GridState {

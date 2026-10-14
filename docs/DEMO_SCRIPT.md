@@ -6,8 +6,7 @@ what to point at.
 ## Before the session
 
 1. `make dev`, open <http://localhost:5173>, check the header says **engine v0.1.0** in green.
-2. Press **p** for presentation mode (larger text, builder hidden), or use **◲ Present**.
-3. Optional dry run: `make demo` in a terminal prints the same workflow without a browser.
+2. Optional dry run: `make demo` in a terminal prints the same workflow without a browser.
 
 If the API is down, the header shows **engine API unreachable** in red. Restart `make dev`.
 

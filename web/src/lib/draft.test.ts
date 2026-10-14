@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { blankDraft, paint, parseImported, personAt, resize } from "./draft";
+import { blankDraft, paint, personAt, resize } from "./draft";
 
 describe("paint", () => {
   it("paints terrain without touching other rows", () => {
@@ -66,22 +66,5 @@ describe("resize", () => {
   it("clamps the agent", () => {
     const d = paint(blankDraft(8, 8), [7, 7], "agent");
     expect(resize(d, 5, 6).agent).toEqual([4, 5]);
-  });
-});
-
-describe("parseImported", () => {
-  it("fills missing optional parts and keeps the rest", () => {
-    const d = parseImported(
-      JSON.stringify({ name: "x", grid_size: [5, 5], params: { p_spread: 0.2 } }),
-    );
-    expect(d.name).toBe("x");
-    expect(d.params.p_spread).toBe(0.2);
-    expect(d.params.weights.w_r).toBe(5);
-    expect(d.scripted_events).toEqual([]);
-  });
-
-  it("rejects non-objects", () => {
-    expect(() => parseImported("[1]")).toThrow();
-    expect(() => parseImported("nope")).toThrow();
   });
 });

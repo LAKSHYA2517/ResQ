@@ -1,4 +1,4 @@
-/** P6: trace integrity over a whole run, and the presentation tools. */
+/** P6: trace integrity over a whole run, the command palette and the run report. */
 
 import { type Page, expect, test } from "@playwright/test";
 
@@ -83,17 +83,11 @@ test("trace integrity: every tick of the Showcase run on screen equals the engin
   }
 });
 
-test("presentation mode, command palette and report export", async ({ page }) => {
+test("command palette and report export", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText(/engine v/)).toBeVisible();
   await page.getByRole("button", { name: "Validate → Start" }).click();
   await expect(page.getByText("tick 0 ·")).toBeVisible();
-
-  await page.getByRole("button", { name: "◲ Present" }).click();
-  await expect(page.getByRole("complementary", { name: "Scenario" })).toHaveCount(0);
-  expect(await page.evaluate(() => document.documentElement.style.fontSize)).toBe("18px");
-  await page.keyboard.press("p");
-  await expect(page.getByRole("complementary", { name: "Scenario" })).toBeVisible();
 
   await page.keyboard.press("ControlOrMeta+k");
   const palette = page.getByRole("dialog");

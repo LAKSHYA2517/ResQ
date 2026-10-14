@@ -94,9 +94,6 @@ export function CommandPalette() {
                   </Item>
                 )}
                 <Item onSelect={() => run(() => goToStep(0, true))}>Start the guided demo</Item>
-                <Item onSelect={() => run(() => ui.setPresentation(!ui.presentation))}>
-                  {ui.presentation ? "Leave" : "Enter"} presentation mode <Kbd>p</Kbd>
-                </Item>
                 <Item onSelect={() => run(() => ui.setMode("build"))}>
                   Open the scenario builder
                 </Item>
