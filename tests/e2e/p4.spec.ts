@@ -145,35 +145,6 @@ test("Modules 6 and 1: planners agree, PEAS, and the syllabus Run it links", asy
   await expect(page.getByText("all methods agree")).toBeVisible();
 });
 
-test("the guided demo runs start to finish with no errors", async ({ page }) => {
-  test.setTimeout(240_000);
-  const errors: string[] = [];
-  page.on("pageerror", (e) => errors.push(e.message));
-  page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
-  await page.goto("/");
-  await expect(page.getByText(/engine v/)).toBeVisible();
-  await page.getByRole("button", { name: "Guided demo" }).click();
-  const bar = page.locator('section[aria-label="Guided demo"]');
-  const titles: string[] = [];
-  for (let i = 0; i < 17; i++) {
-    await expect(bar.getByText(`step ${i + 1} of 17`)).toBeVisible({ timeout: 120_000 });
-    await expect(bar.getByRole("button", { name: "Working…" })).toHaveCount(0, { timeout: 120_000 });
-    titles.push(await bar.locator(".font-semibold").first().innerText());
-    await expect(bar).not.toContainText("Not built yet");
-    if (titles[i] === "Algorithm race") {
-      // the race opens as a modal: watch it, then close it to carry on
-      await expect(page.getByRole("dialog")).toContainText("Algorithm race");
-      await page.getByRole("button", { name: "Close" }).click();
-    }
-    if (i < 16) await bar.getByRole("button", { name: "Next →" }).click();
-  }
-  expect(titles[0]).toBe("Load Showcase");
-  expect(titles[15]).toBe("Agent-type benchmark");
-  expect(titles[16]).toBe("Impossible scenario");
-  await expect(page.getByText("No valid plan right now")).toBeVisible();
-  expect(errors).toEqual([]);
-});
-
 test("P5: planning graph, HTN tree and the agent benchmark", async ({ page }) => {
   await start(page);
   await page.getByRole("tab", { name: "Plan" }).click();

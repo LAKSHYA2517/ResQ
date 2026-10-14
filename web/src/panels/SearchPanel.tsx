@@ -75,7 +75,7 @@ export function SearchPanel() {
   const waiting = view?.state.people.filter((p) => p.status === "WAITING") ?? [];
   const chosen = target || view?.target || waiting[0]?.id || "";
 
-  // The guided demo and the Syllabus "Run it" links open the race directly.
+  // The Syllabus "Run it" links open the race directly.
   // biome-ignore lint/correctness/useExhaustiveDependencies: fire once per focus request
   useEffect(() => {
     if (focus === "race" && sessionId && waiting.length > 0) {

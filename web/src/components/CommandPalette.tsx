@@ -2,7 +2,6 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useQuery } from "@tanstack/react-query";
 import { Command } from "cmdk";
 import { api } from "../api/client";
-import { goToStep } from "../demo";
 import { saveReport } from "../lib/report";
 import { useSim } from "../store/sim";
 import { type Tab, useUi } from "../store/ui";
@@ -93,7 +92,6 @@ export function CommandPalette() {
                     Export run report (JSON + printable page)
                   </Item>
                 )}
-                <Item onSelect={() => run(() => goToStep(0, true))}>Start the guided demo</Item>
                 <Item onSelect={() => run(() => ui.setMode("build"))}>
                   Open the scenario builder
                 </Item>

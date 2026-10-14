@@ -74,7 +74,7 @@ export function Builder() {
   return (
     <div className="flex h-full flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <Section title="Load scenario">
+        <Section title="Predefined scenarios">
           <div className="flex gap-2">
             <select
               aria-label="Predefined scenario"
@@ -82,7 +82,7 @@ export function Builder() {
               value=""
               onChange={(e) => e.target.value && void loadPredefined(e.target.value)}
             >
-              <option value="">Predefined…</option>
+              <option value="">Choose a scenario…</option>
               {scenarios.data
                 ?.filter((s) => s.predefined)
                 .map((s) => (

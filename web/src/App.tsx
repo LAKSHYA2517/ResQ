@@ -1,17 +1,15 @@
 import * as Tabs from "@radix-ui/react-tabs";
 import { useQuery } from "@tanstack/react-query";
-import { Command, Download, Presentation } from "lucide-react";
+import { Command, Download } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { api, type Cell } from "./api/client";
 import { Builder } from "./components/Builder";
 import { CommandPalette } from "./components/CommandPalette";
 import { Controls } from "./components/Controls";
-import { DemoBar } from "./components/DemoBar";
 import { ExplainDialog } from "./components/ExplainDialog";
 import { GridCanvas } from "./components/GridCanvas";
 import { RunSidebar } from "./components/RunSidebar";
 import { Btn, Status } from "./components/ui";
-import { goToStep } from "./demo";
 import { cellName, key } from "./lib/cells";
 import { draftToState } from "./lib/draft";
 import type { Scene } from "./lib/draw";
@@ -53,7 +51,6 @@ export function App() {
   const setMode = useUi((s) => s.setMode);
   const tab = useUi((s) => s.tab);
   const setTab = useUi((s) => s.setTab);
-  const demoStep = useUi((s) => s.demoStep);
   const sim = useSim();
   const view = useView();
   const builder = useBuilder();
@@ -241,17 +238,8 @@ export function App() {
           >
             <Command size={15} />
           </Btn>
-          <Btn
-            tone={demoStep === null ? "default" : "primary"}
-            disabled={apiDown || sim.busy}
-            onClick={() => void goToStep(0, true)}
-          >
-            <Presentation size={15} /> Guided demo
-          </Btn>
         </div>
       </header>
-
-      <DemoBar />
 
       {sim.error && (
         <div role="alert" className="flex items-center gap-3 bg-bad/15 px-4 py-2 text-sm text-bad">
